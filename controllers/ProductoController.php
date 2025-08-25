@@ -4,8 +4,8 @@ require_once __DIR__ . '/../models/Producto.php';
 class ProductoController {
     private $model;
 
-    public function __construct($conn) {
-        $this->model = new Producto($conn);
+    public function __construct($db) {
+        $this->model = new Producto($db);
     }
 
     public function listar() {
@@ -17,13 +17,9 @@ class ProductoController {
     }
 
     public function crear($data, $atributos = []) {
-        $resultado = $this->model->crear($data, $atributos);
-        if ($resultado === false) {
-            return "duplicado"; // ⚠️ Intento de duplicado
-        }
-        return true;
+        return $this->model->crear($data, $atributos);
     }
-    
+
     public function editar($id, $data) {
         return $this->model->editar($id, $data);
     }

@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'nombre'   => $_POST['nombre'],
         'apellido' => $_POST['apellido'],
         'usuario'  => $_POST['usuario'],
-        'clave'    => $_POST['clave'],
+        'contraseña'    => $_POST['contraseña'],
         'rol'      => $_POST['rol']
     ];
     $controller->crear($data);
@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="text" class="form-control" id="usuario" name="usuario" required>
     </div>
     <div class="mb-3">
-      <label for="clave" class="form-label">Contraseña</label>
-      <input type="password" class="form-control" id="clave" name="clave" required>
+      <label for="contraseña" class="form-label">Contraseña</label>
+      <input type="password" class="form-control" id="contraseña" name="contraseña" required>
     </div>
     <div class="mb-3">
       <label for="rol" class="form-label">Rol</label>

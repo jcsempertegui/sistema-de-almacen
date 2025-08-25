@@ -35,7 +35,7 @@ $productos = $controller->listar();
         </tr>
       </thead>
       <tbody>
-        <?php if (count($productos) > 0): ?>
+        <?php if (!empty($productos)): ?>
           <?php foreach ($productos as $p): ?>
             <tr>
               <td><?= htmlspecialchars($p['id']) ?></td>
@@ -43,7 +43,7 @@ $productos = $controller->listar();
               <td><?= htmlspecialchars($p['categoria']) ?></td>
               <td><?= htmlspecialchars($p['unidad']) ?></td>
               <td><?= htmlspecialchars($p['stock']) ?></td>
-              <td><?= htmlspecialchars($p['atributos'] ?? '-') ?></td>
+              <td><?= htmlspecialchars($p['atributos']) ?></td>
               <?php if ($_SESSION['rol'] == 'admin'): ?>
                 <td>
                   <a href="editar.php?id=<?= $p['id'] ?>" class="btn btn-warning btn-sm">✏️ Editar</a>
@@ -54,9 +54,7 @@ $productos = $controller->listar();
             </tr>
           <?php endforeach; ?>
         <?php else: ?>
-          <tr>
-            <td colspan="7" class="text-center">No hay productos registrados</td>
-          </tr>
+          <tr><td colspan="7" class="text-center">No hay productos registrados</td></tr>
         <?php endif; ?>
       </tbody>
     </table>

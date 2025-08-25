@@ -16,9 +16,9 @@ class Usuario {
     }
 
     public function crear($data) {
-        $sql = "INSERT INTO usuario (nombre,apellido,usuario,clave,rol) VALUES (?,?,?,?,?)";
+        $sql = "INSERT INTO usuario (nombre,apellido,usuario,contraseña,rol) VALUES (?,?,?,?,?)";
         $stmt = $this->conn->prepare($sql);
-        $hash = password_hash($data['clave'], PASSWORD_BCRYPT);
+        $hash = password_hash($data['contraseña'], PASSWORD_BCRYPT);
         $stmt->bind_param("sssss",$data['nombre'],$data['apellido'],$data['usuario'],$hash,$data['rol']);
         return $stmt->execute();
     }
@@ -41,7 +41,7 @@ class Usuario {
         $stmt->bind_param("s",$usuario);
         $stmt->execute();
         $res = $stmt->get_result()->fetch_assoc();
-        if($res && password_verify($clave,$res['clave'])) { return $res; }
+        if($res && password_verify($clave,$res['contraseña'])) { return $res; }
         return false;
     }
 }

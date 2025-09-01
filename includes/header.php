@@ -30,6 +30,7 @@ require_once __DIR__ . '/../config/config.php';
           <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/productos/listar.php">Productos</a></li>
           <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/categorias/listar.php">Categorías</a></li>
           <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/atributos/listar.php">Atributos</a></li>
+          <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/remitos/listar.php">Remitos</a></li>
           <?php if ($_SESSION['rol'] == 'admin'): ?>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/usuarios/listar.php">Usuarios</a></li>
           <?php endif; ?>

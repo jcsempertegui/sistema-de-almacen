@@ -42,4 +42,16 @@ if (!isset($_SESSION['user_id'])) {
   </div>
 </div>
 
+<!-- Tarjeta Remitos -->
+<div class="col-md-4">
+  <div class="card text-white bg-info mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Remitos</h5>
+      <p class="card-text">Entradas/Egresos y ajustes de stock.</p>
+      <a href="<?= BASE_URL ?>/views/remitos/listar.php" class="btn btn-light">Ir a Remitos</a>
+    </div>
+  </div>
+</div>
+
+
 <?php include_once __DIR__ . '/../includes/footer.php'; ?>

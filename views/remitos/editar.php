@@ -1,128 +1,133 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/RemitoController.php';
 include_once __DIR__ . '/../../includes/header.php';
 
-if ($_SESSION['rol'] != 'admin') {
-    die("Acceso denegado");
-}
+if ($_SESSION['rol'] !== 'admin') { die('Acceso denegado'); }
 
 $controller = new RemitoController($conn);
+$tipos     = $controller->listarTipos();
+$productos = $controller->listarProductos();
 
-if (!isset($_GET['id'])) {
-    die("ID inválido");
-}
-$id = $_GET['id'];
+$id = (int)($_GET['id'] ?? 0);
 $remito = $controller->obtener($id);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = [
-        'numero' => $_POST['numero'],
-        'fecha' => $_POST['fecha'],
-        'tipo_remito_id' => $_POST['tipo_remito_id'],
-        'observaciones' => $_POST['observaciones']
+        'tipo_remito_id'  => (int)$_POST['tipo_remito_id'],
+        'fecha'           => $_POST['fecha'],
+        'señores'         => $_POST['señores'] ?? '',
+        'atencion'        => $_POST['atencion'] ?? '',
+        'contrato'        => $_POST['contrato'] ?? '',
+        'numero_remito'   => $_POST['numero_remito'] ?? '',
+        'campo'           => $_POST['campo'] ?? '',
+        'orden'           => $_POST['orden'] ?? '',
+        'observaciones'   => $_POST['observaciones'] ?? '',
+        'despachado'      => $_POST['despachado'] ?? '',
+        'transportado'    => $_POST['transportado'] ?? '',
+        'placa'           => $_POST['placa'] ?? '',
+        'recibido'        => $_POST['recibido'] ?? ''
     ];
 
     $detalles = [];
-    if (isset($_POST['producto_id'])) {
-        foreach ($_POST['producto_id'] as $i => $prodId) {
-            $detalles[] = [
-                'producto_id' => $prodId,
-                'cantidad' => $_POST['cantidad'][$i]
-            ];
+    if (!empty($_POST['producto_id'])) {
+        foreach ($_POST['producto_id'] as $i => $pid) {
+            $pid = (int)$pid;
+            $cant = (int)($_POST['cantidad'][$i] ?? 0);
+            if ($pid > 0 && $cant > 0) $detalles[] = ['producto_id' => $pid, 'cantidad' => $cant];
         }
     }
 
     $controller->editar($id, $data, $detalles);
-    header("Location: listar.php?msg=Remito editado correctamente");
+    header("Location: listar.php?msg=Remito actualizado");
     exit;
 }
-
-$tipos = $controller->listarTipos();
-$productos = $controller->listarProductos();
 ?>
+<div class="container mt-3">
+  <h2>✏️ Editar Remito #<?= $remito['id'] ?></h2>
 
-<div class="container mt-4">
-  <h2>✏️ Editar Remito</h2>
-  <form method="POST" class="card p-4 shadow-sm">
+  <form method="post" class="card p-3 shadow-sm">
+    <div class="row g-3">
+      <div class="col-md-2">
+        <label class="form-label">Fecha</label>
+        <input type="date" name="fecha" class="form-control" required value="<?= htmlspecialchars($remito['fecha']) ?>">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Tipo</label>
+        <select name="tipo_remito_id" class="form-select" required>
+          <?php foreach ($tipos as $t): ?>
+            <option value="<?= $t['id'] ?>" <?= ($t['id']==$remito['tipo_remito_id']?'selected':'') ?>><?= htmlspecialchars($t['nombre']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">N° Remito</label>
+        <input type="text" name="numero_remito" class="form-control" value="<?= htmlspecialchars($remito['numero_remito']) ?>">
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Campo</label>
+        <input type="text" name="campo" class="form-control" value="<?= htmlspecialchars($remito['campo']) ?>">
+      </div>
 
-    <div class="mb-3">
-      <label for="numero" class="form-label">Número</label>
-      <input type="text" class="form-control" id="numero" name="numero" value="<?= htmlspecialchars($remito['numero']) ?>" required>
-    </div>
+      <div class="col-md-6">
+        <label class="form-label">Señores</label>
+        <input type="text" name="señores" class="form-control" value="<?= htmlspecialchars($remito['señores']) ?>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Atención</label>
+        <input type="text" name="atencion" class="form-control" value="<?= htmlspecialchars($remito['atencion']) ?>">
+      </div>
 
-    <div class="mb-3">
-      <label for="fecha" class="form-label">Fecha</label>
-      <input type="date" class="form-control" id="fecha" name="fecha" value="<?= htmlspecialchars($remito['fecha']) ?>" required>
-    </div>
+      <div class="col-md-4">
+        <label class="form-label">Contrato</label>
+        <input type="text" name="contrato" class="form-control" value="<?= htmlspecialchars($remito['contrato']) ?>">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Orden</label>
+        <input type="text" name="orden" class="form-control" value="<?= htmlspecialchars($remito['orden']) ?>">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Placa</label>
+        <input type="text" name="placa" class="form-control" value="<?= htmlspecialchars($remito['placa']) ?>">
+      </div>
 
-    <div class="mb-3">
-      <label for="tipo_remito_id" class="form-label">Tipo de Remito</label>
-      <select name="tipo_remito_id" id="tipo_remito_id" class="form-select" required>
-        <?php foreach ($tipos as $t): ?>
-          <option value="<?= $t['id'] ?>" <?= ($remito['tipo_remito_id'] == $t['id']) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($t['nombre']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
+      <div class="col-md-4">
+        <label class="form-label">Despachado</label>
+        <input type="text" name="despachado" class="form-control" value="<?= htmlspecialchars($remito['despachado']) ?>">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Transportado</label>
+        <input type="text" name="transportado" class="form-control" value="<?= htmlspecialchars($remito['transportado']) ?>">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Recibido</label>
+        <input type="text" name="recibido" class="form-control" value="<?= htmlspecialchars($remito['recibido']) ?>">
+      </div>
 
-    <div class="mb-3">
-      <label for="observaciones" class="form-label">Observaciones</label>
-      <textarea class="form-control" name="observaciones"><?= htmlspecialchars($remito['observaciones']) ?></textarea>
+      <div class="col-12">
+        <label class="form-label">Observaciones</label>
+        <textarea name="observaciones" class="form-control" rows="2"><?= htmlspecialchars($remito['observaciones']) ?></textarea>
+      </div>
     </div>
 
     <hr>
-    <h4>📦 Detalle de Productos</h4>
-    <div id="productos-container">
-      <?php foreach ($remito['detalles'] as $d): ?>
-      <div class="row g-3 mb-2 producto-item">
-        <div class="col-md-6">
-          <select name="producto_id[]" class="form-select" required>
-            <?php foreach ($productos as $p): ?>
-              <option value="<?= $p['id'] ?>" <?= ($d['producto_id'] == $p['id']) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($p['nombre']) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <input type="number" name="cantidad[]" class="form-control" value="<?= htmlspecialchars($d['cantidad']) ?>" required>
-        </div>
-        <div class="col-md-2">
-          <button type="button" class="btn btn-danger btn-remove">🗑</button>
-        </div>
-      </div>
-      <?php endforeach; ?>
-    </div>
 
-    <button type="button" id="add-producto" class="btn btn-secondary mb-3">➕ Agregar Producto</button>
+    <h5>Detalle</h5>
+    <div id="detalle-rows" class="vstack gap-2"></div>
+    <button type="button" class="btn btn-outline-primary mt-2" id="btnAddRow">➕ Agregar producto</button>
 
-    <div>
-      <button type="submit" class="btn btn-primary">💾 Guardar</button>
-      <a href="listar.php" class="btn btn-secondary">↩️ Cancelar</a>
+    <div class="mt-3 d-flex gap-2">
+      <button class="btn btn-primary">💾 Guardar cambios</button>
+      <a class="btn btn-secondary" href="listar.php">Cancelar</a>
     </div>
   </form>
 </div>
 
+<script src="<?= BASE_URL ?>/public/js/remitos.js"></script>
 <script>
-document.getElementById("add-producto").addEventListener("click", function() {
-  let container = document.getElementById("productos-container");
-  let item = document.querySelector(".producto-item").cloneNode(true);
-  item.querySelectorAll("input, select").forEach(el => el.value = "");
-  container.appendChild(item);
-
-  item.querySelector(".btn-remove").addEventListener("click", function() {
-    item.remove();
-  });
-});
-
-document.querySelectorAll(".btn-remove").forEach(btn => {
-  btn.addEventListener("click", function() {
-    btn.closest(".producto-item").remove();
-  });
-});
+  window.__PRODUCTOS__ = <?= json_encode($productos, JSON_UNESCAPED_UNICODE) ?>;
+  window.__DETALLES__  = <?= json_encode($remito['detalles'], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>

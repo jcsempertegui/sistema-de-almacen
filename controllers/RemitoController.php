@@ -4,12 +4,12 @@ require_once __DIR__ . '/../models/Remito.php';
 class RemitoController {
     private $model;
 
-    public function __construct($conn) {
-        $this->model = new Remito($conn);
+    public function __construct($db) {
+        $this->model = new Remito($db);
     }
 
-    public function listar($filtros = []) {
-        return $this->model->listar($filtros);
+    public function listar($filtroFecha = '', $filtroUsuario = '') {
+        return $this->model->listar($filtroFecha, $filtroUsuario);
     }
 
     public function obtener($id) {
@@ -28,8 +28,15 @@ class RemitoController {
         return $this->model->eliminar($id);
     }
 
-    // Selects
-    public function listarUsuarios()   { return $this->model->listarUsuarios(); }
-    public function listarTipos()      { return $this->model->listarTipos(); }
-    public function listarProductos()  { return $this->model->listarProductos(); }
+    public function listarTipos() {
+        return $this->model->listarTipos();
+    }
+
+    public function listarProductos() {
+        return $this->model->listarProductos();
+    }
+
+    public function listarUsuarios() {
+        return $this->model->listarUsuarios();
+    }
 }

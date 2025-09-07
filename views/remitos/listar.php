@@ -33,13 +33,13 @@ $usuarios = $controller->listarUsuarios();
         <?php endforeach; ?>
       </select>
     </div>
-    <div class="col-md-3 align-self-end">
+    <div class="col-md-5 align-self-end">
       <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
       <a href="listar.php" class="btn btn-secondary">❌ Limpiar</a>
+      <a href="crear.php" class="btn btn-primary">➕ Nuevo Remito</a>
+
     </div>
   </form>
-
-  <a href="crear.php" class="btn btn-success mb-3">➕ Nuevo Remito</a>
 
   <div class="table-responsive">
     <table class="table table-striped table-bordered">

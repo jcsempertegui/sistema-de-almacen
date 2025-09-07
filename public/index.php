@@ -55,6 +55,15 @@ if (!isset($_SESSION['user_id'])) {
 <div class="col-md-4">
   <div class="card text-white bg-info mb-3">
     <div class="card-body">
+      <h5 class="card-title">Entregas</h5>
+      <p class="card-text">Registrar y consultar entregas a trabajadores.</p>
+      <a href="<?= BASE_URL ?>/views/entregas/listar.php" class="btn btn-light">Ir a Entregas</a>
+    </div>
+  </div>
+</div>
+<div class="col-md-4">
+  <div class="card text-white bg-info mb-3">
+    <div class="card-body">
       <h5 class="card-title">Trabajadores</h5>
       <p class="card-text">Gestione los trabajadores registrados en el sistema.</p>
       <a href="../views/trabajadores/listar.php" class="btn btn-light">Ir a Trabajadores</a>

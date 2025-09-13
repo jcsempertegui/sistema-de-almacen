@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <option value="">Seleccione...</option>
           <?php foreach ($trabajadores as $t): ?>
             <option value="<?= $t['id'] ?>" <?= (int)$entrega['trabajador_id'] === (int)$t['id'] ? 'selected' : '' ?>>
-              <?= htmlspecialchars($t['nombre']) ?>
+                <?= htmlspecialchars($t['nombre'] . ' ' . $t['apellido_paterno'] . ' ' . $t['apellido_materno']) ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -89,7 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   <option value="<?= $p['id'] ?>"
                           title="<?= htmlspecialchars($p['atributos'] ?? '') ?>"
                           <?= (int)$p['id'] === (int)$d['producto_id'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($p['nombre']) ?><?= !empty($p['atributos']) ? ' — '.htmlspecialchars($p['atributos']) : '' ?>
+                    <?= htmlspecialchars($p['nombre']) ?>
+                    <?= !empty($p['atributos']) ? ' — ' . htmlspecialchars($p['atributos']) : '' ?>
                   </option>
                 <?php endforeach; ?>
               </select>
@@ -111,8 +112,149 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </form>
 </div>
 
+<!-- Select2 + JS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="<?= BASE_URL ?>/public/js/entregas.js"></script>
 
-<?php include_once __DIR__ . '/../../includes/footer.php'; ?>
+<script>
+// Código JavaScript similar al de crear.php
+document.addEventListener('DOMContentLoaded', function() {
+    const addButton = document.getElementById('addRow');
+    const tbody = document.getElementById('detalle-body');
+    
+    // Datos de productos desde PHP
+    const productosData = <?= json_encode($productos) ?>;
+    
+    // Array para trackear productos seleccionados
+    let productosSeleccionados = new Set();
+    
+    // Inicializar con los selects existentes
+    const selectsExistentes = document.querySelectorAll('.producto-select');
+    selectsExistentes.forEach(select => {
+        if (select.value) {
+            productosSeleccionados.add(select.value);
+            select.setAttribute('data-previous-value', select.value);
+        }
+    });
+    
+    // Función para generar opciones de un select
+    function generarOpcionesSelect(select, selectedValue = '') {
+        // Limpiar opciones existentes (excepto la primera vacía)
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+        
+        // Agregar opciones disponibles
+        productosData.forEach(producto => {
+            // Solo agregar opción si no está seleccionada o es la actualmente seleccionada
+            if (!productosSeleccionados.has(producto.id.toString()) || producto.id.toString() === selectedValue) {
+                const option = document.createElement('option');
+                option.value = producto.id;
+                option.textContent = producto.nombre + (producto.atributos ? " — " + producto.atributos : "");
+                option.setAttribute('title', producto.atributos || '');
+                
+                if (producto.id.toString() === selectedValue) {
+                    option.selected = true;
+                }
+                
+                select.appendChild(option);
+            }
+        });
+    }
+    
+    // Función para actualizar TODOS los selects
+    function actualizarTodosLosSelects() {
+        const todosSelects = document.querySelectorAll('.producto-select');
+        
+        todosSelects.forEach(select => {
+            const currentValue = select.value;
+            generarOpcionesSelect(select, currentValue);
+            
+            // Re-inicializar Select2
+            $(select).select2({
+                width: '100%',
+                templateResult: function(state) {
+                    if (!state.id) return state.text;
+                    const attr = state.element.getAttribute('title');
+                    if (attr) {
+                        const dashIndex = state.text.indexOf(' — ');
+                        const productName = dashIndex !== -1 ? state.text.substring(0, dashIndex) : state.text;
+                        return productName + ' — ' + attr;
+                    }
+                    return state.text;
+                },
+                templateSelection: function(state) {
+                    if (!state.id) return state.text;
+                    const attr = state.element.getAttribute('title');
+                    if (attr) {
+                        const dashIndex = state.text.indexOf(' — ');
+                        const productName = dashIndex !== -1 ? state.text.substring(0, dashIndex) : state.text;
+                        return productName + ' — ' + attr;
+                    }
+                    return state.text;
+                }
+            });
+        });
+    }
+    
+    // Inicializar Select2 en todos los selects existentes
+    $('.producto-select').select2({
+        width: '100%',
+        templateResult: function(state) {
+            if (!state.id) return state.text;
+            const attr = state.element.getAttribute('title');
+            if (attr) {
+                const dashIndex = state.text.indexOf(' — ');
+                const productName = dashIndex !== -1 ? state.text.substring(0, dashIndex) : state.text;
+                return productName + ' — ' + attr;
+            }
+            return state.text;
+        },
+        templateSelection: function(state) {
+            if (!state.id) return state.text;
+            const attr = state.element.getAttribute('title');
+            if (attr) {
+                const dashIndex = state.text.indexOf(' — ');
+                const productName = dashIndex !== -1 ? state.text.substring(0, dashIndex) : state.text;
+                return productName + ' — ' + attr;
+            }
+            return state.text;
+        }
+    }).on('change', function() {
+        const oldValue = this.getAttribute('data-previous-value') || '';
+        const newValue = this.value;
+        
+        // Actualizar tracking
+        if (oldValue && oldValue !== '') {
+            productosSeleccionados.delete(oldValue);
+        }
+        if (newValue && newValue !== '') {
+            productosSeleccionados.add(newValue);
+        }
+        
+        this.setAttribute('data-previous-value', newValue);
+        actualizarTodosLosSelects();
+    });
+    
+    // Inicializar todos los selects
+    actualizarTodosLosSelects();
+    
+    // Agregar fila nueva
+    addButton.addEventListener('click', function() {
+        const newRow = tbody.querySelector('tr:first-child').cloneNode(true);
+        const select = newRow.querySelector('select');
+        const cantidadInput = newRow.querySelector('input[name="cantidad[]"]');
+        const motivoInput = newRow.querySelector('input[name="motivo[]"]');
+        
+        // Limpiar valores
+        select.value = '';
+        cantidadInput.value = '1';
+        motivoInput.value = '';
+        
+        // Remover Select2 si existe
+        $(select).removeClass('select2-hidden-accessible');
+        $(select).siblings('.select2-container').remove();
+        
+        // Restaurar clases Bootstrap
+        select.class

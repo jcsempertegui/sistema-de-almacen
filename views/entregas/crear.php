@@ -61,7 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <select name="trabajador_id" class="form-select" required>
           <option value="">Seleccione...</option>
           <?php foreach ($trabajadores as $t): ?>
-            <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre']) ?></option>
+            <option value="<?= $t['id'] ?>">
+                <?= htmlspecialchars($t['nombre'] . ' ' . $t['apellido_paterno'] . ' ' . $t['apellido_materno']) ?>
+            </option>
           <?php endforeach; ?>
         </select>
       </div>
@@ -81,33 +83,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <h5 class="mt-3">🛒 Detalle de Productos</h5>
-    <table class="table table-bordered" id="productosTable">
-      <thead>
-        <tr>
-          <th style="width:55%">Producto</th>
-          <th style="width:15%">Cantidad</th>
-          <th style="width:20%">Motivo</th>
-          <th style="width:10%">Acción</th>
-        </tr>
-      </thead>
-      <tbody id="detalle-body">
-        <tr class="detalle-row">
-          <td>
-            <select name="producto_id[]" class="form-select producto-select" required>
-              <option value="">Seleccione...</option>
-              <?php foreach ($productos as $p): ?>
-                <option value="<?= $p['id'] ?>" title="<?= htmlspecialchars($p['atributos'] ?? '') ?>">
-                  <?= htmlspecialchars($p['nombre']) ?><?= !empty($p['atributos']) ? ' — '.htmlspecialchars($p['atributos']) : '' ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
-          </td>
-          <td><input type="number" min="1" name="cantidad[]" class="form-control" value="1" required></td>
-          <td><input type="text" name="motivo[]" class="form-control"></td>
-          <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-        </tr>
-      </tbody>
-    </table>
+<table class="table table-bordered" id="productosTable">
+  <thead>
+    <tr>
+      <th style="width:55%">Producto</th>
+      <th style="width:15%">Cantidad</th>
+      <th style="width:20%">Motivo</th>
+      <th style="width:10%">Acción</th>
+    </tr>
+  </thead>
+  <tbody id="detalle-body">
+    <tr class="detalle-row">
+      <td>
+        <select name="producto_id[]" class="form-select producto-select" required>
+          <option value="">Seleccione...</option>
+          <?php foreach ($productos as $p): ?>
+              <option value="<?= $p['id'] ?>" 
+                      title="<?= htmlspecialchars($p['atributos'] ?? '') ?>">
+                  <?= htmlspecialchars($p['nombre']) ?>
+              </option>
+          <?php endforeach; ?>
+        </select>
+      </td>
+      <td><input type="number" min="1" name="cantidad[]" class="form-control" value="1" required></td>
+      <td><input type="text" name="motivo[]" class="form-control"></td>
+      <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
+    </tr>
+  </tbody>
+</table>
 
     <button type="button" class="btn btn-secondary mb-3" id="addRow">➕ Agregar Producto</button>
 
@@ -118,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </form>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="<?= BASE_URL ?>/public/js/entregas.js"></script>

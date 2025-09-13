@@ -8,7 +8,9 @@ class Entrega {
 
     // 📌 Listar entregas con trabajador y usuario
     public function listar($filtroFecha = '', $filtroTrabajador = '') {
-        $sql = "SELECT e.id, e.fecha, t.nombre as trabajador, u.usuario as registrado_por, e.campo, e.inspector
+        $sql = "SELECT e.id, e.fecha, 
+                       CONCAT(t.nombre, ' ', t.apellido_paterno, ' ', t.apellido_materno) as trabajador, 
+                       u.usuario as registrado_por, e.campo, e.inspector
                 FROM entrega e
                 INNER JOIN trabajador t ON e.trabajador_id = t.id
                 INNER JOIN usuario u ON e.usuario_id = u.id
@@ -37,7 +39,11 @@ class Entrega {
 
     // 📌 Obtener entrega con sus detalles
     public function obtener($id) {
-        $sql = "SELECT * FROM entrega WHERE id=?";
+        $sql = "SELECT e.*, 
+                       CONCAT(t.nombre, ' ', t.apellido_paterno, ' ', t.apellido_materno) as trabajador_nombre
+                FROM entrega e
+                INNER JOIN trabajador t ON e.trabajador_id = t.id
+                WHERE e.id=?";
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -136,7 +142,7 @@ class Entrega {
     // Helpers
     public function listarProductos() {
         $sql = "SELECT p.id, p.nombre,
-                       GROUP_CONCAT(CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ') AS atributos
+                       GROUP_CONCAT(DISTINCT CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ') AS atributos
                 FROM producto p
                 LEFT JOIN atributo_producto ap ON ap.producto_id = p.id
                 LEFT JOIN atributo a ON a.id = ap.atributo_id
@@ -145,6 +151,6 @@ class Entrega {
     }
 
     public function listarTrabajadores() {
-        return $this->conn->query("SELECT id, nombre FROM trabajador ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
+        return $this->conn->query("SELECT id, nombre, apellido_paterno, apellido_materno FROM trabajador ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
     }
 }

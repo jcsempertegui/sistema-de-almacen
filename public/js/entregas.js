@@ -1,62 +1,102 @@
 // public/js/entregas.js
-// Requiere jQuery y Select2 en la página
-(function () {
-    const $tbody = $('#detalle-body');
-    const $add   = $('#addRow');
-  
-    function initSelect2(ctx) {
-      (ctx || $(document)).find('.producto-select').select2({
-        width: '100%',
-        templateResult: formatProduct,
-        templateSelection: formatProduct
+(function ($) {
+  'use strict';
+
+  $(function() {
+      const $tbody = $('#detalle-body');
+      const $add   = $('#addRow');
+
+      // Guardar lista maestra desde el primer <select>
+      let masterOptions = [];
+      $('.producto-select:first option').each(function() {
+          masterOptions.push({
+              value: $(this).val(),
+              text: $(this).text(),
+              title: $(this).attr('title') || ''
+          });
       });
-    }
-  
-    function formatProduct(state) {
-      if (!state.id) return state.text;
-      const attr = $(state.element).attr('title');
-      if (attr) return $('<span>').html(state.text + ' <small style="color:#555;">— ' + attr + '</small>');
-      return state.text;
-    }
-  
-    function newRowHtml() {
-      const $firstSelect = $('#detalle-body .producto-select:first');
-      const optionsHtml = $firstSelect.length ? $firstSelect.html() : '<option value="">Seleccione...</option>';
-      return `
-        <tr class="detalle-row">
-          <td>
-            <select name="producto_id[]" class="form-select producto-select" required>
-              ${optionsHtml}
-            </select>
-          </td>
-          <td><input type="number" min="1" name="cantidad[]" class="form-control" value="1" required></td>
-          <td><input type="text" name="motivo[]" class="form-control"></td>
-          <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-        </tr>
-      `;
-    }
-  
-    $add.on('click', function () {
-      const $row = $(newRowHtml());
-      $tbody.append($row);
-      initSelect2($row);
-    });
-  
-    $tbody.on('click', '.removeRow', function () {
-      const $rows = $tbody.find('.detalle-row');
-      if ($rows.length === 1) {
-        // resetear última fila
-        $rows.find('select').val('').trigger('change');
-        $rows.find('input[name="cantidad[]"]').val(1);
-        $rows.find('input[name="motivo[]"]').val('');
-      } else {
-        $(this).closest('tr').remove();
+
+      // Plantilla de producto para Select2
+      function formatProduct(state) {
+          if (!state.id) return state.text;
+          const $option = $(state.element);
+          const attr = $option.attr('title');
+          return attr ? state.text + ' — ' + attr : state.text;
       }
-    });
-  
-    // inicializar selects existentes
-    $(document).ready(function() {
-      initSelect2($(document));
-    });
-  })();
-  
+
+      // Inicializar Select2
+      function initSelect2($sel) {
+          if ($sel.hasClass('select2-hidden-accessible')) {
+              $sel.select2('destroy');
+          }
+          $sel.select2({
+              width: '100%',
+              templateResult: formatProduct,
+              templateSelection: formatProduct
+          }).off('change.unique').on('change.unique', actualizarOpciones);
+      }
+
+      // Reconstruir todas las opciones evitando duplicados
+      function actualizarOpciones() {
+          const usados = $('.producto-select').map(function() {
+              return $(this).val();
+          }).get().filter(v => v !== "");
+
+          $('.producto-select').each(function() {
+              const $sel = $(this);
+              const actual = $sel.val();
+
+              let html = '<option value="">Seleccione...</option>';
+              masterOptions.forEach(o => {
+                  if (o.value === "" ) return; // saltar vacío
+                  if (actual === o.value || !usados.includes(o.value)) {
+                      html += `<option value="${o.value}" title="${o.title}">${o.text}</option>`;
+                  }
+              });
+
+              $sel.html(html).val(actual);
+              initSelect2($sel);
+          });
+      }
+
+      // Crear nueva fila
+      function newRow() {
+          let html = '<option value="">Seleccione...</option>';
+          masterOptions.forEach(o => {
+              if (o.value !== "") {
+                  html += `<option value="${o.value}" title="${o.title}">${o.text}</option>`;
+              }
+          });
+          return `
+              <tr class="detalle-row">
+                <td>
+                  <select name="producto_id[]" class="form-select producto-select" required>
+                    ${html}
+                  </select>
+                </td>
+                <td><input type="number" min="1" name="cantidad[]" class="form-control" value="1" required></td>
+                <td><input type="text" name="motivo[]" class="form-control"></td>
+                <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
+              </tr>
+          `;
+      }
+
+      // Agregar fila
+      $add.on('click', function() {
+          const $row = $(newRow());
+          $tbody.append($row);
+          initSelect2($row.find('.producto-select'));
+          actualizarOpciones();
+      });
+
+      // Eliminar fila
+      $tbody.on('click', '.removeRow', function() {
+          $(this).closest('tr').remove();
+          actualizarOpciones();
+      });
+
+      // Inicializar primera fila
+      initSelect2($('.producto-select'));
+      actualizarOpciones();
+  });
+})(jQuery);

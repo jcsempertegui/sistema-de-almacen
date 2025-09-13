@@ -26,7 +26,7 @@ $trabajadores = $controller->listarTrabajadores();
         <option value="">Todos</option>
         <?php foreach ($trabajadores as $t): ?>
           <option value="<?= $t['id'] ?>" <?= $filtroTrabajador == $t['id'] ? 'selected' : '' ?>>
-            <?= htmlspecialchars($t['nombre']) ?>
+            <?= htmlspecialchars($t['nombre'] . ' ' . $t['apellido_paterno'] . ' ' . $t['apellido_materno']) ?>
           </option>
         <?php endforeach; ?>
       </select>
@@ -37,9 +37,6 @@ $trabajadores = $controller->listarTrabajadores();
       <a href="crear.php" class="btn btn-primary">➕ Nueva Entrega</a>
     </div>
   </form>
-
-
-
 
   <div class="table-responsive">
     <table class="table table-striped table-bordered">

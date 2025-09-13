@@ -13,7 +13,7 @@ $entrega = $controller->obtener($id);
   <h2>👁 Detalle Entrega #<?= htmlspecialchars($entrega['id'] ?? '') ?></h2>
 
   <p><strong>Fecha:</strong> <?= htmlspecialchars($entrega['fecha'] ?? '') ?></p>
-  <p><strong>Trabajador:</strong> <?= htmlspecialchars($entrega['trabajador_id'] ?? '') ?></p>
+  <p><strong>Trabajador:</strong> <?= htmlspecialchars($entrega['trabajador_nombre'] ?? '') ?></p>
   <p><strong>Inspector:</strong> <?= htmlspecialchars($entrega['inspector'] ?? '') ?></p>
   <p><strong>Campo:</strong> <?= htmlspecialchars($entrega['campo'] ?? '') ?></p>
 

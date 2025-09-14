@@ -16,7 +16,7 @@
           });
       });
 
-      // Plantilla de producto para Select2
+      // Formato para Select2
       function formatProduct(state) {
           if (!state.id) return state.text;
           const $option = $(state.element);
@@ -24,7 +24,7 @@
           return attr ? state.text + ' — ' + attr : state.text;
       }
 
-      // Inicializar Select2
+      // Inicializar Select2 en un select
       function initSelect2($sel) {
           if ($sel.hasClass('select2-hidden-accessible')) {
               $sel.select2('destroy');
@@ -36,7 +36,7 @@
           }).off('change.unique').on('change.unique', actualizarOpciones);
       }
 
-      // Reconstruir todas las opciones evitando duplicados
+      // Actualizar todas las listas evitando repetidos
       function actualizarOpciones() {
           const usados = $('.producto-select').map(function() {
               return $(this).val();
@@ -48,7 +48,8 @@
 
               let html = '<option value="">Seleccione...</option>';
               masterOptions.forEach(o => {
-                  if (o.value === "" ) return; // saltar vacío
+                  if (o.value === "") return;
+                  // Mostrar solo si no está usado o es el seleccionado actual
                   if (actual === o.value || !usados.includes(o.value)) {
                       html += `<option value="${o.value}" title="${o.title}">${o.text}</option>`;
                   }
@@ -59,7 +60,7 @@
           });
       }
 
-      // Crear nueva fila
+      // Nueva fila
       function newRow() {
           let html = '<option value="">Seleccione...</option>';
           masterOptions.forEach(o => {
@@ -95,7 +96,7 @@
           actualizarOpciones();
       });
 
-      // Inicializar primera fila
+      // Inicialización
       initSelect2($('.producto-select'));
       actualizarOpciones();
   });

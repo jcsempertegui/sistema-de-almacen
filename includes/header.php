@@ -35,6 +35,18 @@ require_once __DIR__ . '/../config/config.php';
           <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/trabajadores/listar.php">Trabajadores</a></li>
           <?php if ($_SESSION['rol'] == 'admin'): ?>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/usuarios/listar.php">Usuarios</a></li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="reportesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Reportes
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="reportesDropdown">
+                <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/entradas.php">📥 Entradas</a></li>
+                <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/salidas.php">📤 Salidas</a></li>
+                <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/entregas.php">📦 Entregas</a></li>
+                <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/stock.php">📊 Stock</a></li>
+                <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/movimientos.php">🔄 Movimientos</a></li>
+              </ul>
+            </li>
           <?php endif; ?>
         </ul>
         <span class="navbar-text text-light">

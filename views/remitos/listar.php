@@ -1,77 +1,99 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/RemitoController.php';
 include_once __DIR__ . '/../../includes/header.php';
 
 $controller = new RemitoController($conn);
 
-$filtroFecha = $_GET['fecha'] ?? '';
-$filtroUsuario = $_GET['usuario_id'] ?? '';
-$remitos = $controller->listar($filtroFecha, $filtroUsuario);
+// Filtros
+$inicio   = $_GET['inicio']   ?? '';
+$fin      = $_GET['fin']      ?? '';
+$numero   = $_GET['numero']   ?? '';
+$tipo     = $_GET['tipo']     ?? '';
+$usuario  = $_GET['usuario']  ?? '';
+
+$remitos = $controller->listarAvanzado($inicio, $fin, $numero, $tipo, $usuario);
+$tipos   = $controller->listarTipos();
 $usuarios = $controller->listarUsuarios();
 ?>
 
-<div class="container mt-4">
+<div class="d-flex justify-content-between mb-3">
   <h2>📑 Remitos</h2>
+  <a href="crear.php" class="btn btn-success">➕ Nuevo Remito</a>
+</div>
 
-  <form method="GET" class="row g-3 mb-4">
-    <div class="col-md-3">
-      <label class="form-label">Fecha</label>
-      <input type="date" name="fecha" class="form-control" value="<?= htmlspecialchars($filtroFecha) ?>">
+<form method="GET" class="card card-body mb-3">
+  <div class="row g-2">
+    <div class="col-md-2">
+      <label class="form-label">Desde</label>
+      <input type="date" name="inicio" class="form-control" value="<?= htmlspecialchars($inicio) ?>">
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
+      <label class="form-label">Hasta</label>
+      <input type="date" name="fin" class="form-control" value="<?= htmlspecialchars($fin) ?>">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Número</label>
+      <input type="text" name="numero" class="form-control" value="<?= htmlspecialchars($numero) ?>">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Tipo</label>
+      <select name="tipo" class="form-select">
+        <option value="">Todos</option>
+        <?php foreach ($tipos as $t): ?>
+          <option value="<?= $t['id'] ?>" <?= $tipo==$t['id'] ? 'selected' : '' ?>>
+            <?= htmlspecialchars($t['nombre']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="col-md-2">
       <label class="form-label">Usuario</label>
-      <select name="usuario_id" class="form-select">
+      <select name="usuario" class="form-select">
         <option value="">Todos</option>
         <?php foreach ($usuarios as $u): ?>
-          <option value="<?= $u['id'] ?>" <?= $filtroUsuario == $u['id'] ? 'selected' : '' ?>>
+          <option value="<?= $u['id'] ?>" <?= $usuario==$u['id'] ? 'selected' : '' ?>>
             <?= htmlspecialchars($u['usuario']) ?>
           </option>
         <?php endforeach; ?>
       </select>
     </div>
-    <div class="col-md-5 align-self-end">
-      <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary me-2">🔍 Filtrar</button>
       <a href="listar.php" class="btn btn-secondary">❌ Limpiar</a>
-      <a href="crear.php" class="btn btn-primary">➕ Nuevo Remito</a>
-
     </div>
-  </form>
-
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>Número</th>
-          <th>Tipo</th>
-          <th>Usuario</th>
-          <th>Fecha</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($remitos as $r): ?>
-          <tr>
-            <td><?= $r['id'] ?></td>
-            <td><?= htmlspecialchars($r['numero']) ?></td>
-            <td><?= htmlspecialchars($r['tipo']) ?></td>
-            <td><?= htmlspecialchars($r['registrado_por']) ?></td>
-            <td><?= htmlspecialchars($r['fecha']) ?></td>
-            <td>
-              <a href="ver.php?id=<?= $r['id'] ?>" class="btn btn-info btn-sm">👁 Ver</a>
-              <a href="editar.php?id=<?= $r['id'] ?>" class="btn btn-warning btn-sm">✏ Editar</a>
-              <a href="eliminar.php?id=<?= $r['id'] ?>" class="btn btn-danger btn-sm"
-                 onclick="return confirm('¿Eliminar este remito?')">🗑 Eliminar</a>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
   </div>
-</div>
+</form>
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>ID</th>
+      <th>Número</th>
+      <th>Tipo</th>
+      <th>Usuario</th>
+      <th>Fecha</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach ($remitos as $r): ?>
+      <tr>
+        <td><?= $r['id'] ?></td>
+        <td><?= htmlspecialchars($r['numero']) ?></td>
+        <td><?= htmlspecialchars($r['tipo']) ?></td>
+        <td><?= htmlspecialchars($r['registrado_por']) ?></td>
+        <td><?= htmlspecialchars($r['fecha']) ?></td>
+        <td>
+          <a href="ver.php?id=<?= $r['id'] ?>" class="btn btn-info btn-sm">👁 Ver</a>
+          <a href="editar.php?id=<?= $r['id'] ?>" class="btn btn-warning btn-sm">✏ Editar</a>
+          <a href="eliminar.php?id=<?= $r['id'] ?>" class="btn btn-danger btn-sm"
+             onclick="return confirm('¿Seguro de eliminar este remito?')">🗑 Eliminar</a>
+        </td>
+      </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>
 
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>

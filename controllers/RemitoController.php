@@ -8,8 +8,8 @@ class RemitoController {
         $this->model = new Remito($db);
     }
 
-    public function listar($filtroFecha = '', $filtroUsuario = '') {
-        return $this->model->listar($filtroFecha, $filtroUsuario);
+    public function listarAvanzado($inicio = '', $fin = '', $numero = '', $tipo = '', $usuario = '') {
+        return $this->model->listarAvanzado($inicio, $fin, $numero, $tipo, $usuario);
     }
 
     public function obtener($id) {

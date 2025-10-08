@@ -2,8 +2,6 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/EntregaController.php';
-include_once __DIR__ . '/../../includes/header.php';
-
 /*if ($_SESSION['rol'] != 'admin') {
     die("Acceso denegado");
 }*/
@@ -45,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+include_once __DIR__ . '/../../includes/header.php';
 ?>
-
 <div class="container mt-4">
   <h2>➕ Nueva Entrega</h2>
 

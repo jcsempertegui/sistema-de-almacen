@@ -6,31 +6,46 @@ class Entrega {
         $this->conn = $db;
     }
 
-    // 📌 Listar entregas con trabajador y usuario
-    public function listar($filtroFecha = '', $filtroTrabajador = '') {
-        $sql = "SELECT e.id, e.fecha, 
-                       CONCAT(t.nombre, ' ', t.apellido_paterno, ' ', t.apellido_materno) as trabajador, 
+    // 📌 Listar entregas con filtros avanzados
+    public function listar($fechaInicio = '', $fechaFin = '', $trabajadorId = '', $usuarioId = '') {
+        $sql = "SELECT e.id, e.fecha, CONCAT(t.nombre, ' ', t.apellido_paterno, ' ', t.apellido_materno) as trabajador, 
                        u.usuario as registrado_por, e.campo, e.inspector
                 FROM entrega e
                 INNER JOIN trabajador t ON e.trabajador_id = t.id
                 INNER JOIN usuario u ON e.usuario_id = u.id
                 WHERE 1=1";
 
-        if (!empty($filtroFecha)) {
-            $sql .= " AND DATE(e.fecha) = ?";
+        $params = [];
+        $types = "";
+
+        if (!empty($fechaInicio)) {
+            $sql .= " AND DATE(e.fecha) >= ?";
+            $params[] = $fechaInicio;
+            $types .= "s";
         }
-        if (!empty($filtroTrabajador)) {
+
+        if (!empty($fechaFin)) {
+            $sql .= " AND DATE(e.fecha) <= ?";
+            $params[] = $fechaFin;
+            $types .= "s";
+        }
+
+        if (!empty($trabajadorId)) {
             $sql .= " AND e.trabajador_id = ?";
+            $params[] = $trabajadorId;
+            $types .= "i";
         }
+
+        if (!empty($usuarioId)) {
+            $sql .= " AND e.usuario_id = ?";
+            $params[] = $usuarioId;
+            $types .= "i";
+        }
+
 
         $stmt = $this->conn->prepare($sql);
-
-        if (!empty($filtroFecha) && !empty($filtroTrabajador)) {
-            $stmt->bind_param("si", $filtroFecha, $filtroTrabajador);
-        } elseif (!empty($filtroFecha)) {
-            $stmt->bind_param("s", $filtroFecha);
-        } elseif (!empty($filtroTrabajador)) {
-            $stmt->bind_param("i", $filtroTrabajador);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
         }
 
         $stmt->execute();
@@ -150,7 +165,13 @@ class Entrega {
         return $this->conn->query($sql)->fetch_all(MYSQLI_ASSOC);
     }
 
-    public function listarTrabajadores() {
-        return $this->conn->query("SELECT id, nombre, apellido_paterno, apellido_materno FROM trabajador ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
-    }
+        // 📌 Helpers
+        public function listarTrabajadores() {
+            return $this->conn->query("SELECT id, nombre, apellido_paterno, apellido_materno FROM trabajador ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
+        }
+    
+        public function listarUsuarios() {
+            return $this->conn->query("SELECT id, usuario FROM usuario ORDER BY usuario ASC")->fetch_all(MYSQLI_ASSOC);
+        }
+    
 }

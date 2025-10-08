@@ -8,8 +8,8 @@ class EntregaController {
         $this->model = new Entrega($db);
     }
 
-    public function listar($fecha = '', $trabajador = '') {
-        return $this->model->listar($fecha, $trabajador);
+    public function listar($fechaInicio = '',$fechaFin = '', $trabajadorId = '', $usuarioId = '') {
+        return $this->model->listar($fechaInicio, $fechaFin, $trabajadorId, $usuarioId);
     }
 
     public function obtener($id) {
@@ -35,4 +35,9 @@ class EntregaController {
     public function listarTrabajadores() {
         return $this->model->listarTrabajadores();
     }
+
+    public function listarUsuarios() {
+        return $this->model->listarUsuarios();
+    }
+
 }

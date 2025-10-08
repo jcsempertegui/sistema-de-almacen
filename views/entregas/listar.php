@@ -6,40 +6,65 @@ include_once __DIR__ . '/../../includes/header.php';
 
 $controller = new EntregaController($conn);
 
-$filtroFecha = $_GET['fecha'] ?? '';
-$filtroTrabajador = $_GET['trabajador_id'] ?? '';
-$entregas = $controller->listar($filtroFecha, $filtroTrabajador);
+// ✅ Capturar filtros
+$fechaInicio = $_GET['fecha_inicio'] ?? '';
+$fechaFin    = $_GET['fecha_fin'] ?? '';
+$trabajador  = $_GET['trabajador'] ?? '';
+$usuario     = $_GET['usuario'] ?? '';
+
+// ✅ Obtener datos
+$entregas     = $controller->listar($fechaInicio, $fechaFin, $trabajador, $usuario);
 $trabajadores = $controller->listarTrabajadores();
+$usuarios     = $controller->listarUsuarios();
 ?>
 
 <div class="container mt-4">
   <h2>📦 Entregas a Trabajadores</h2>
 
-  <form method="GET" class="row g-3 mb-3">
-    <div class="col-md-3">
-      <label class="form-label">Fecha</label>
-      <input type="date" name="fecha" class="form-control" value="<?= htmlspecialchars($filtroFecha) ?>">
+  <!-- 🔎 Filtros -->
+  <form method="GET" class="card p-3 mb-3 shadow-sm">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Fecha inicio</label>
+        <input type="date" name="fecha_inicio" class="form-control" value="<?= htmlspecialchars($fechaInicio) ?>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Fecha fin</label>
+        <input type="date" name="fecha_fin" class="form-control" value="<?= htmlspecialchars($fechaFin) ?>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Trabajador</label>
+        <select name="trabajador" class="form-select">
+          <option value="">Todos</option>
+          <?php foreach ($trabajadores as $t): ?>
+            <option value="<?= $t['id'] ?>" <?= $trabajador == $t['id'] ? 'selected' : '' ?>>
+              <?= htmlspecialchars($t['nombre'] . ' ' . $t['apellido_paterno'] . ' ' . $t['apellido_materno']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Usuario</label>
+        <select name="usuario" class="form-select">
+          <option value="">Todos</option>
+          <?php foreach ($usuarios as $u): ?>
+            <option value="<?= $u['id'] ?>" <?= $usuario == $u['id'] ? 'selected' : '' ?>>
+              <?= htmlspecialchars($u['usuario']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
-    <div class="col-md-4">
-      <label class="form-label">Trabajador</label>
-      <select name="trabajador_id" class="form-select">
-        <option value="">Todos</option>
-        <?php foreach ($trabajadores as $t): ?>
-          <option value="<?= $t['id'] ?>" <?= $filtroTrabajador == $t['id'] ? 'selected' : '' ?>>
-            <?= htmlspecialchars($t['nombre'] . ' ' . $t['apellido_paterno'] . ' ' . $t['apellido_materno']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div class="col-md-5 align-self-end">
+    <div class="mt-3">
       <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
       <a href="listar.php" class="btn btn-secondary">❌ Limpiar</a>
-      <a href="crear.php" class="btn btn-primary">➕ Nueva Entrega</a>
+      <a href="crear.php" class="btn btn-success float-end">➕ Nueva Entrega</a>
     </div>
   </form>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered">
+  <!-- 📋 Tabla -->
+  <div class="table-responsive card shadow-sm">
+    <table class="table table-striped table-bordered mb-0">
       <thead class="table-dark">
         <tr>
           <th>ID</th>
@@ -61,12 +86,12 @@ $trabajadores = $controller->listarTrabajadores();
             <td><?= htmlspecialchars($e['registrado_por']) ?></td>
             <td><?= htmlspecialchars($e['campo']) ?></td>
             <td>
-                <a href="ver.php?id=<?= $e['id'] ?>" class="btn btn-info btn-sm">👁 Ver</a>
-                <?php if ($_SESSION['rol'] == 'admin'): ?>
-                    <a href="editar.php?id=<?= $e['id'] ?>" class="btn btn-warning btn-sm">✏ Editar</a>
-                    <a href="eliminar.php?id=<?= $e['id'] ?>" class="btn btn-danger btn-sm"
-                    onclick="return confirm('¿Eliminar esta entrega?')">🗑 Eliminar</a>
-                <?php endif; ?>
+              <a href="ver.php?id=<?= $e['id'] ?>" class="btn btn-info btn-sm">👁 Ver</a>
+              <?php if ($_SESSION['rol'] == 'admin'): ?>
+                <a href="editar.php?id=<?= $e['id'] ?>" class="btn btn-warning btn-sm">✏ Editar</a>
+                <a href="eliminar.php?id=<?= $e['id'] ?>" class="btn btn-danger btn-sm"
+                   onclick="return confirm('¿Eliminar esta entrega?')">🗑 Eliminar</a>
+              <?php endif; ?>
             </td>
           </tr>
         <?php endforeach; ?>

@@ -18,10 +18,12 @@ $categorias = $controller->listar();
   <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
 <?php endif; ?>
 
-<div class="container mt-4">
+<div class="d-flex justify-content-between mb-3">
   <h2>📂 Categorías</h2>
-  <a href="crear.php" class="btn btn-primary mb-3">➕ Nueva Categoría</a>
+  <a href="crear.php" class="btn btn-success">➕ Nueva Categoría</a>
+</div>
 
+<div class="container mt-4">
   <div class="table-responsive">
     <table class="table table-bordered table-striped">
       <thead class="table-dark">
@@ -50,7 +52,7 @@ $categorias = $controller->listar();
         <?php endif; ?>
       </tbody>
     </table>
-  </div>
-</div>
+    </div>
+    </div>
 
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>

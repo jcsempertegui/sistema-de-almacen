@@ -7,17 +7,20 @@ include_once __DIR__ . '/../../includes/header.php';
 $controller = new ProductoController($conn);
 $productos = $controller->listar();
 ?>
-
-<div class="container mt-4">
-  <h2>📦 Productos</h2>
-
-  <?php if (isset($_GET['msg'])): ?>
+<div class="d-flex justify-content-between mb-3">
+<h2>📦 Productos</h2>
+<?php if (isset($_GET['msg'])): ?>
     <div class="alert alert-success"><?= htmlspecialchars($_GET['msg']) ?></div>
   <?php endif; ?>
 
   <?php if ($_SESSION['rol'] == 'admin'): ?>
-    <a href="crear.php" class="btn btn-primary mb-3">➕ Nuevo Producto</a>
+    <a href="crear.php" class="btn btn-success">➕ Nueva Producto</a>
   <?php endif; ?>
+
+</div>
+
+<div class="container mt-4">
+
 
   <div class="table-responsive">
     <table class="table table-striped table-bordered align-middle">

@@ -18,17 +18,18 @@ $trabajadores = $controller->listarTrabajadores();
 $usuarios     = $controller->listarUsuarios();
 ?>
 
-<div class="container mt-4">
+<div class="d-flex justify-content-between mb-3">
   <h2>📦 Entregas a Trabajadores</h2>
-
+  <a href="crear.php" class="btn btn-success">➕ Nueva Entrega</a>
+</div>
   <!-- 🔎 Filtros -->
-  <form method="GET" class="card p-3 mb-3 shadow-sm">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-3">
+  <form method="GET" class="card card-body mb-3">
+    <div class="row g-2 ">
+      <div class="col-md-2">
         <label class="form-label">Fecha inicio</label>
         <input type="date" name="fecha_inicio" class="form-control" value="<?= htmlspecialchars($fechaInicio) ?>">
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <label class="form-label">Fecha fin</label>
         <input type="date" name="fecha_fin" class="form-control" value="<?= htmlspecialchars($fechaFin) ?>">
       </div>
@@ -54,11 +55,10 @@ $usuarios     = $controller->listarUsuarios();
           <?php endforeach; ?>
         </select>
       </div>
-    </div>
-    <div class="mt-3">
-      <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+      <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary me-2">🔍 Filtrar</button>
       <a href="listar.php" class="btn btn-secondary">❌ Limpiar</a>
-      <a href="crear.php" class="btn btn-success float-end">➕ Nueva Entrega</a>
+      </div>
     </div>
   </form>
 

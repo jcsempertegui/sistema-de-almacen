@@ -18,11 +18,12 @@ $atributos = $controller->listar();
   <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
 <?php endif; ?>
 
+<div class="d-flex justify-content-between mb-3">
+<h2>🔖 Atributos</h2>
+  <a href="crear.php" class="btn btn-success">➕ Nuevo Atributo</a>
+</div>
 
 <div class="container mt-4">
-  <h2>🔖 Atributos</h2>
-  <a href="crear.php" class="btn btn-primary mb-3">➕ Nuevo Atributo</a>
-
   <div class="table-responsive">
     <table class="table table-bordered table-striped">
       <thead class="table-dark">

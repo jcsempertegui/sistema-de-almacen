@@ -8,15 +8,15 @@ $controller = new TrabajadorController($conn);
 $trabajadores = $controller->listar();
 ?>
 
+<div class="d-flex justify-content-between mb-3">
+<h2>👷 Trabajadores</h2>
+<?php if (isset($_GET['msg'])): ?>
+  <div class="alert alert-success"><?= htmlspecialchars($_GET['msg']) ?></div>
+<?php endif; ?>
+<a href="crear.php" class="btn btn-success">➕ Nuevo Trabajador</a>
+</div>
+
 <div class="container mt-4">
-  <h2>👷 Trabajadores</h2>
-
-  <?php if (isset($_GET['msg'])): ?>
-    <div class="alert alert-success"><?= htmlspecialchars($_GET['msg']) ?></div>
-  <?php endif; ?>
-
-  <a href="crear.php" class="btn btn-primary mb-3">➕ Nuevo Trabajador</a>
-
   <table class="table table-bordered table-striped">
     <thead class="table-dark">
       <tr>

@@ -19,5 +19,18 @@ class ReporteController {
     public function listarProductos() {
         return $this->model->listarProductos();
     }
+    
+    public function listarTrabajadores() {
+        return $this->model->listarTrabajadores();
+    }
+
+    public function salidas($fechaInicio = '', $fechaFin = '', $usuarioId = '', $productoId = '', $numero = '') {
+        return $this->model->salidas($fechaInicio, $fechaFin, $usuarioId, $productoId, $numero);
+    }
+
+    public function entregas($fechaInicio = '', $fechaFin = '', $trabajadorId = '', $usuarioId = '', $productoId = '') {
+    return $this->model->entregas($fechaInicio, $fechaFin, $trabajadorId, $usuarioId, $productoId);
+    }
+
 }
 ?>

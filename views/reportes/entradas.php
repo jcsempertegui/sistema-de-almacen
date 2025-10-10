@@ -120,7 +120,12 @@ $productos = $controller->listarProductos();
               <tr>
                 <td><?= htmlspecialchars($row['fecha']) ?></td>
                 <td><?= htmlspecialchars($row['numero']) ?></td>
-                <td><?= htmlspecialchars($row['producto']) ?></td>
+                <td>
+                <?= htmlspecialchars($row['producto']) ?>
+                <?php if (!empty($row['atributos'])): ?>
+                  <small class="text-muted"> — <?= htmlspecialchars($row['atributos']) ?></small>
+                <?php endif; ?>
+                </td>
                 <td><?= htmlspecialchars($row['cantidad']) ?></td>
                 <td><?= htmlspecialchars($row['usuario']) ?></td>
                 <td><?= htmlspecialchars($row['campo']) ?></td>

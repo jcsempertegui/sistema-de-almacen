@@ -27,7 +27,7 @@ $productos    = $controller->listarProductos();
 
 <style>
   .container {
-    max-width: 95%;
+    max-width: 97%;
     margin: auto;
   }
   .filtros-card {
@@ -45,38 +45,38 @@ $productos    = $controller->listarProductos();
   }
 </style>
 
-<div class="container mt-4">
+<div class="container mt-3">
   <h2>📦 Reporte de Entregas a Trabajadores</h2>
 
   <?php if (!empty($error)): ?>
     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
   <?php endif; ?>
 
-  <!-- 🔍 FILTROS -->
-  <form method="GET" class="card card-body mb-3">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-2">
+  <!-- 🔍 FILTROS Y BOTONES EN UNA SOLA FILA -->
+  <form method="GET" class="card card-body mb-3 filtros-card">
+    <div class="row g-2 align-items-end">
+      <div class="col-12 col-sm-6 col-md-2">
         <label class="form-label">Fecha inicio</label>
-        <input type="date" name="fecha_inicio" class="form-control" value="<?= htmlspecialchars($fechaInicio) ?>">
+        <input type="date" name="fecha_inicio" class="form-control form-control-sm" value="<?= htmlspecialchars($fechaInicio) ?>">
       </div>
-      <div class="col-md-2">
+      <div class="col-12 col-sm-6 col-md-2">
         <label class="form-label">Fecha fin</label>
-        <input type="date" name="fecha_fin" class="form-control" value="<?= htmlspecialchars($fechaFin) ?>">
+        <input type="date" name="fecha_fin" class="form-control form-control-sm" value="<?= htmlspecialchars($fechaFin) ?>">
       </div>
-      <div class="col-md-2">
+      <div class="col-12 col-sm-6 col-md-2">
         <label class="form-label">Trabajador</label>
-        <select name="trabajador_id" class="form-select">
+        <select name="trabajador_id" class="form-select form-select-sm">
           <option value="">Todos</option>
           <?php foreach ($trabajadores as $t): ?>
             <option value="<?= $t['id'] ?>" <?= ($trabajadorId == $t['id']) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($t['nombre'] . ' ' . $t['apellido_paterno'] . ' ' . $t['apellido_materno']) ?>
+              <?= htmlspecialchars($t['nombre']) . ' ' . htmlspecialchars($t['apellido_paterno']) . ' ' . htmlspecialchars($t['apellido_materno']) ?>
             </option>
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="col-md-2">
+      <div class="col-12 col-sm-6 col-md-2">
         <label class="form-label">Usuario</label>
-        <select name="usuario_id" class="form-select">
+        <select name="usuario_id" class="form-select form-select-sm">
           <option value="">Todos</option>
           <?php foreach ($usuarios as $u): ?>
             <option value="<?= $u['id'] ?>" <?= ($usuarioId == $u['id']) ? 'selected' : '' ?>>
@@ -85,9 +85,9 @@ $productos    = $controller->listarProductos();
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="col-md-2">
+      <div class="col-12 col-sm-6 col-md-2">
         <label class="form-label">Producto</label>
-        <select name="producto_id" class="form-select">
+        <select name="producto_id" class="form-select form-select-sm">
           <option value="">Todos</option>
           <?php foreach ($productos as $p): ?>
             <option value="<?= $p['id'] ?>" <?= ($productoId == $p['id']) ? 'selected' : '' ?>>
@@ -96,10 +96,10 @@ $productos    = $controller->listarProductos();
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="col-md-2 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary me-2">🔍 Filtrar</button>
-        <a href="entregas.php" class="btn btn-secondary me-2">❌ Limpiar</a>
-        <button type="button" onclick="imprimirReporte()" class="btn btn-success">🖨 Imprimir</button>
+      <div class="col-12 col-sm-6 col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-primary btn-sm flex-fill">🔍 Filtrar</button>
+        <a href="entregas.php" class="btn btn-secondary btn-sm flex-fill">❌ Limpiar</a>
+        <button type="button" onclick="imprimirReporte()" class="btn btn-success btn-sm flex-fill">🖨 Imprimir</button>
       </div>
     </div>
   </form>

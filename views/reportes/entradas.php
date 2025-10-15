@@ -54,7 +54,7 @@ $productos = $controller->listarProductos();
 
   <!-- 🔍 FILTROS -->
   <form method="GET" class="card card-body mb-3">
-    <div class="row g-3 align-items-end">
+    <div class="row g-2 align-items-end">
       <div class="col-md-2">
         <label class="form-label">Fecha inicio</label>
         <input type="date" name="fecha_inicio" class="form-control" value="<?= htmlspecialchars($fechaInicio) ?>">
@@ -89,7 +89,7 @@ $productos = $controller->listarProductos();
         <label class="form-label">N° Remito</label>
         <input type="text" name="numero" class="form-control" value="<?= htmlspecialchars($numero) ?>">
       </div>
-      <div class="col-md-1 d-flex align-items-end">
+      <div class="col-md-1 d-flex align-items-end gap-1">
       <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
       <a href="entradas.php" class="btn btn-secondary">❌ Limpiar</a>
       <button type="button" onclick="imprimirReporte()" class="btn btn-success">🖨 Imprimir</button>

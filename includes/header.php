@@ -67,7 +67,6 @@ require_once __DIR__ . '/../config/config.php';
                 <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/entradas.php">📥 Entradas</a></li>
                 <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/salidas.php">📤 Salidas</a></li>
                 <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/entregas.php">📦 Entregas</a></li>
-                <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/stock.php">📊 Stock</a></li>
                 <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/movimientos.php">🔄 Movimientos</a></li>
               </ul>
             </li>

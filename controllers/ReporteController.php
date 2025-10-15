@@ -32,5 +32,17 @@ class ReporteController {
     return $this->model->entregas($fechaInicio, $fechaFin, $trabajadorId, $usuarioId, $productoId);
     }
 
+    public function stock($categoriaId = '', $productoId = '', $usuarioId = '') {
+    return $this->model->stock($categoriaId, $productoId, $usuarioId);
+    }
+
+    public function listarCategorias() {
+    return $this->model->listarCategorias();
+    }
+
+    public function movimientos($fechaInicio = '', $fechaFin = '', $categoriaId = '', $productoId = '') {
+    return $this->model->movimientos($fechaInicio, $fechaFin, $categoriaId, $productoId);
+    }
+    
 }
 ?>

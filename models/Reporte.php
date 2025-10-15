@@ -79,6 +79,12 @@ class Reporte {
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
 
+    // 📌 Listar todas las categorías de productos
+    public function listarCategorias() {
+        $sql = "SELECT id, nombre FROM categoria ORDER BY nombre ASC";
+        $res = $this->conn->query($sql);
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+    }
 
     // 📋 Listar productos con sus atributos
     public function listarProductos() {
@@ -206,7 +212,72 @@ class Reporte {
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+
+    public function movimientos($fechaInicio = '', $fechaFin = '', $categoriaId = '', $productoId = '') {
+        $sql = "
+        SELECT
+            p.id AS producto_id,
+            p.nombre AS producto,
+            c.nombre AS categoria,
+            COALESCE(attr.atributos, '') AS atributos,
+            COALESCE(SUM(CASE WHEN r.tipo_remito_id = 1 THEN dr.cantidad END), 0) AS total_entradas,
+            COALESCE(SUM(CASE WHEN r.tipo_remito_id = 2 THEN dr.cantidad END), 0) AS total_salidas,
+            COALESCE(SUM(de.cantidad), 0) AS total_entregas,
+            p.stock AS stock_actual
+        FROM producto p
+        LEFT JOIN categoria c ON p.categoria_id = c.id
+        LEFT JOIN detalle_remito dr ON dr.producto_id = p.id
+        LEFT JOIN remito r ON r.id = dr.remito_id
+        LEFT JOIN detalle_entrega de ON de.producto_id = p.id
+        LEFT JOIN entrega e ON e.id = de.entrega_id
+        LEFT JOIN (
+            SELECT ap.producto_id,
+                   GROUP_CONCAT(CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ') AS atributos
+            FROM atributo_producto ap
+            LEFT JOIN atributo a ON a.id = ap.atributo_id
+            GROUP BY ap.producto_id
+        ) attr ON attr.producto_id = p.id
+        WHERE 1=1
+        ";
     
+        $types = '';
+        $params = [];
+    
+        if (!empty($fechaInicio) && !empty($fechaFin)) {
+            $sql .= " AND ((r.fecha BETWEEN ? AND ?) OR (e.fecha BETWEEN ? AND ?))";
+            $types .= 'ssss';
+            $params = array_merge($params, [$fechaInicio, $fechaFin, $fechaInicio, $fechaFin]);
+        }
+    
+        if (!empty($categoriaId)) {
+            $sql .= " AND p.categoria_id = ?";
+            $types .= 'i';
+            $params[] = $categoriaId;
+        }
+    
+        if (!empty($productoId)) {
+            $sql .= " AND p.id = ?";
+            $types .= 'i';
+            $params[] = $productoId;
+        }
+    
+        $sql .= " GROUP BY p.id, p.nombre, c.nombre, attr.atributos, p.stock ORDER BY p.nombre ASC";
+    
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $bind_names[] = $types;
+            for ($i = 0; $i < count($params); $i++) {
+                $bind_name = 'bind' . $i;
+                $$bind_name = $params[$i];
+                $bind_names[] = &$$bind_name;
+            }
+            call_user_func_array([$stmt, 'bind_param'], $bind_names);
+        }
+    
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_all(MYSQLI_ASSOC);
+    }
     
 }
 ?>

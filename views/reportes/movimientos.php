@@ -1,186 +1,164 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../controllers/ReporteController.php';
 include_once __DIR__ . '/../../includes/header.php';
 
-// Filtros
-$filtroProducto = $_GET['producto_id'] ?? '';
-$filtroCategoria = $_GET['categoria_id'] ?? '';
-$filtroFechaIni = $_GET['fecha_ini'] ?? '';
-$filtroFechaFin = $_GET['fecha_fin'] ?? '';
-$export = $_GET['export'] ?? ''; // excel | pdf
+$controller = new ReporteController($conn);
 
-// Query base
-$sql = "
-SELECT 
-    p.id,
-    p.nombre,
-    c.nombre AS categoria,
-    COALESCE(SUM(dr.cantidad), 0) AS total_entradas,
-    COALESCE(SUM(de.cantidad), 0) AS total_salidas,
-    p.stock AS stock_actual
-FROM producto p
-LEFT JOIN categoria c ON p.categoria_id = c.id
-LEFT JOIN detalle_remito dr ON p.id = dr.producto_id
-LEFT JOIN remito r ON dr.remito_id = r.id
-LEFT JOIN detalle_entrega de ON p.id = de.producto_id
-LEFT JOIN entrega e ON de.entrega_id = e.id
-WHERE 1=1
-";
+// 📅 Filtros
+$fechaInicio  = $_GET['fecha_inicio'] ?? '';
+$fechaFin     = $_GET['fecha_fin'] ?? '';
+$categoriaId  = $_GET['categoria_id'] ?? '';
+$productoId   = $_GET['producto_id'] ?? '';
 
-$params = [];
-$types  = "";
-
-if ($filtroProducto !== "") {
-    $sql .= " AND p.id = ? ";
-    $params[] = $filtroProducto;
-    $types   .= "i";
+try {
+    $movimientos = $controller->movimientos($fechaInicio, $fechaFin, $categoriaId, $productoId);
+} catch (Exception $ex) {
+    $movimientos = [];
+    $error = $ex->getMessage();
 }
 
-if ($filtroCategoria !== "") {
-    $sql .= " AND c.id = ? ";
-    $params[] = $filtroCategoria;
-    $types   .= "i";
-}
-
-if ($filtroFechaIni !== "" && $filtroFechaFin !== "") {
-    $sql .= " AND (
-                 (r.fecha BETWEEN ? AND ?)
-              OR (e.fecha BETWEEN ? AND ?)
-             ) ";
-    $params[] = $filtroFechaIni;
-    $params[] = $filtroFechaFin;
-    $params[] = $filtroFechaIni;
-    $params[] = $filtroFechaFin;
-    $types   .= "ssss";
-}
-
-$sql .= " GROUP BY p.id, p.nombre, c.nombre, p.stock
-          ORDER BY p.nombre ASC";
-
-$stmt = $conn->prepare($sql);
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-$rows = $result->fetch_all(MYSQLI_ASSOC);
-
-// Exportar Excel
-if ($export === 'excel') {
-    header("Content-Type: application/vnd.ms-excel");
-    header("Content-Disposition: attachment; filename=reporte_movimientos.xls");
-    echo "Producto\tCategoría\tEntradas\tSalidas\tStock Actual\n";
-    foreach ($rows as $r) {
-        echo "{$r['nombre']}\t{$r['categoria']}\t{$r['total_entradas']}\t{$r['total_salidas']}\t{$r['stock_actual']}\n";
-    }
-    exit;
-}
-
-// Exportar PDF (usando FPDF)
-if ($export === 'pdf') {
-    require_once __DIR__ . '/../../vendor/autoload.php'; // asegúrate de tener FPDF o Dompdf instalado
-    $pdf = new FPDF();
-    $pdf->AddPage();
-    $pdf->SetFont('Arial','B',12);
-    $pdf->Cell(0,10,'Reporte de Movimientos de Inventario',0,1,'C');
-    $pdf->Ln(5);
-    $pdf->SetFont('Arial','B',10);
-    $pdf->Cell(50,8,'Producto',1);
-    $pdf->Cell(40,8,'Categoria',1);
-    $pdf->Cell(30,8,'Entradas',1);
-    $pdf->Cell(30,8,'Salidas',1);
-    $pdf->Cell(30,8,'Stock',1);
-    $pdf->Ln();
-    $pdf->SetFont('Arial','',10);
-    foreach ($rows as $r) {
-        $pdf->Cell(50,8,$r['nombre'],1);
-        $pdf->Cell(40,8,$r['categoria'],1);
-        $pdf->Cell(30,8,$r['total_entradas'],1);
-        $pdf->Cell(30,8,$r['total_salidas'],1);
-        $pdf->Cell(30,8,$r['stock_actual'],1);
-        $pdf->Ln();
-    }
-    $pdf->Output();
-    exit;
-}
-
-// Combos para filtros
-$productos = $conn->query("SELECT id, nombre FROM producto ORDER BY nombre")->fetch_all(MYSQLI_ASSOC);
-$categorias = $conn->query("SELECT id, nombre FROM categoria ORDER BY nombre")->fetch_all(MYSQLI_ASSOC);
+$categorias = $controller->listarCategorias();
+$productos  = $controller->listarProductos();
 ?>
 
+<style>
+  .container {
+    max-width: 95%;
+    margin: auto;
+  }
+  .filtros-card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+  }
+  .filtros-card .form-label {
+    font-weight: 500;
+  }
+  .table th {
+    white-space: nowrap;
+  }
+  .btn {
+    font-weight: 500;
+  }
+</style>
+
 <div class="container mt-4">
-  <h2>📊 Reporte de Movimientos de Inventario</h2>
+  <h2>🔄 Reporte de Movimientos de Inventario</h2>
 
-  <form method="GET" class="row g-3 mb-4">
-    <div class="col-md-3">
-      <label class="form-label">Producto</label>
-      <select name="producto_id" class="form-select">
-        <option value="">Todos</option>
-        <?php foreach ($productos as $p): ?>
-          <option value="<?= $p['id'] ?>" <?= ($filtroProducto == $p['id']) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($p['nombre']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
+  <?php if (!empty($error)): ?>
+    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+  <?php endif; ?>
 
-    <div class="col-md-3">
-      <label class="form-label">Categoría</label>
-      <select name="categoria_id" class="form-select">
-        <option value="">Todas</option>
-        <?php foreach ($categorias as $c): ?>
-          <option value="<?= $c['id'] ?>" <?= ($filtroCategoria == $c['id']) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($c['nombre']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-
-    <div class="col-md-3">
-      <label class="form-label">Fecha inicio</label>
-      <input type="date" name="fecha_ini" class="form-control" value="<?= htmlspecialchars($filtroFechaIni) ?>">
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">Fecha fin</label>
-      <input type="date" name="fecha_fin" class="form-control" value="<?= htmlspecialchars($filtroFechaFin) ?>">
-    </div>
-
-    <div class="col-12">
-      <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
-      <a href="movimientos.php" class="btn btn-secondary">🔄 Reset</a>
-      <a href="movimientos.php?<?= http_build_query(array_merge($_GET, ['export'=>'excel'])) ?>" class="btn btn-success">⬇ Excel</a>
-      <a href="movimientos.php?<?= http_build_query(array_merge($_GET, ['export'=>'pdf'])) ?>" class="btn btn-danger">⬇ PDF</a>
+  <!-- 🔍 FILTROS -->
+  <form method="GET" class="card card-body mb-3 filtros-card">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label">Fecha inicio</label>
+        <input type="date" name="fecha_inicio" class="form-control" value="<?= htmlspecialchars($fechaInicio) ?>">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Fecha fin</label>
+        <input type="date" name="fecha_fin" class="form-control" value="<?= htmlspecialchars($fechaFin) ?>">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Categoría</label>
+        <select name="categoria_id" class="form-select">
+          <option value="">Todas</option>
+          <?php foreach ($categorias as $c): ?>
+            <option value="<?= $c['id'] ?>" <?= ($categoriaId == $c['id']) ? 'selected' : '' ?>>
+              <?= htmlspecialchars($c['nombre']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-2 align-auto">
+        <label class="form-label">Producto</label>
+        <select name="producto_id" class="form-select">
+          <option value="">Todos</option>
+          <?php foreach ($productos as $p): ?>
+            <option value="<?= $p['id'] ?>" <?= ($productoId == $p['id']) ? 'selected' : '' ?>>
+              <?= htmlspecialchars($p['nombre']) ?><?= !empty($p['atributos']) ? ' — ' . htmlspecialchars($p['atributos']) : '' ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-12 col-md-3 d-flex justify-content-end align-items-end gap-2 ms-auto">
+        <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+        <a href="movimientos.php" class="btn btn-secondary">❌ Limpiar</a>
+        <button type="button" onclick="imprimirReporte()" class="btn btn-success">🖨 Imprimir</button>
+      </div>
     </div>
   </form>
 
-  <table class="table table-striped table-bordered">
-    <thead>
-      <tr>
-        <th>Producto</th>
-        <th>Categoría</th>
-        <th>Total Entradas</th>
-        <th>Total Salidas</th>
-        <th>Stock Actual</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (empty($rows)): ?>
-        <tr><td colspan="5" class="text-center">No hay datos con los filtros aplicados</td></tr>
-      <?php else: ?>
-        <?php foreach ($rows as $r): ?>
-          <tr>
-            <td><?= htmlspecialchars($r['nombre']) ?></td>
-            <td><?= htmlspecialchars($r['categoria']) ?></td>
-            <td><?= (int)$r['total_entradas'] ?></td>
-            <td><?= (int)$r['total_salidas'] ?></td>
-            <td><?= (int)$r['stock_actual'] ?></td>
-          </tr>
-        <?php endforeach; ?>
-      <?php endif; ?>
-    </tbody>
-  </table>
+  <!-- 📊 TABLA -->
+  <div class="card shadow-sm" id="reporteArea">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Producto</th>
+              <th>Atributos</th>
+              <th>Categoría</th>
+              <th>Total Entradas</th>
+              <th>Total Salidas</th>
+              <th>Total Entregas</th>
+              <th>Stock Actual</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php if (empty($movimientos)): ?>
+            <tr><td colspan="7" class="text-center">No se encontraron resultados</td></tr>
+          <?php else: ?>
+            <?php foreach ($movimientos as $row): ?>
+              <tr>
+                <td><?= htmlspecialchars($row['producto']) ?></td>
+                <td><?= htmlspecialchars($row['atributos'] ?? '') ?></td>
+                <td><?= htmlspecialchars($row['categoria']) ?></td>
+                <td><?= htmlspecialchars($row['total_entradas']) ?></td>
+                <td><?= htmlspecialchars($row['total_salidas']) ?></td>
+                <td><?= htmlspecialchars($row['total_entregas']) ?></td>
+                <td><?= htmlspecialchars($row['stock_actual']) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- 🖨 IMPRESIÓN -->
+<script>
+function imprimirReporte() {
+  const area = document.getElementById("reporteArea").innerHTML;
+  const ventana = window.open("", "PRINT", "width=1000,height=800");
+  ventana.document.write(`
+    <html>
+      <head>
+        <title>Reporte de Movimientos</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          h3 { text-align: center; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #333; padding: 6px; font-size: 13px; text-align: left; }
+          th { background: #f8f8f8; }
+        </style>
+      </head>
+      <body>
+        <h3>🔄 Reporte de Movimientos — ${new Date().toLocaleDateString()}</h3>
+        ${area}
+      </body>
+    </html>
+  `);
+  ventana.document.close();
+  ventana.focus();
+  ventana.print();
+  ventana.close();
+}
+</script>
 
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>

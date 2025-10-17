@@ -51,45 +51,45 @@ $productos  = $controller->listarProductos();
   <?php endif; ?>
 
   <!-- 🔍 FILTROS -->
-  <form method="GET" class="card card-body mb-3 filtros-card">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-2">
-        <label class="form-label">Fecha inicio</label>
-        <input type="date" name="fecha_inicio" class="form-control" value="<?= htmlspecialchars($fechaInicio) ?>">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Fecha fin</label>
-        <input type="date" name="fecha_fin" class="form-control" value="<?= htmlspecialchars($fechaFin) ?>">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Categoría</label>
-        <select name="categoria_id" class="form-select">
-          <option value="">Todas</option>
-          <?php foreach ($categorias as $c): ?>
-            <option value="<?= $c['id'] ?>" <?= ($categoriaId == $c['id']) ? 'selected' : '' ?>>
-              <?= htmlspecialchars($c['nombre']) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="col-md-2 align-auto">
-        <label class="form-label">Producto</label>
-        <select name="producto_id" class="form-select">
-          <option value="">Todos</option>
-          <?php foreach ($productos as $p): ?>
-            <option value="<?= $p['id'] ?>" <?= ($productoId == $p['id']) ? 'selected' : '' ?>>
-              <?= htmlspecialchars($p['nombre']) ?><?= !empty($p['atributos']) ? ' — ' . htmlspecialchars($p['atributos']) : '' ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="col-12 col-md-3 d-flex justify-content-end align-items-end gap-2 ms-auto">
-        <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
-        <a href="movimientos.php" class="btn btn-secondary">❌ Limpiar</a>
-        <button type="button" onclick="imprimirReporte()" class="btn btn-success">🖨 Imprimir</button>
-      </div>
+<form method="GET" class="card card-body mb-3 filtros-card">
+  <div class="row g-3 align-items-end">
+    <div class="col-12 col-sm-6 col-md-2">
+      <label class="form-label">Fecha inicio</label>
+      <input type="date" name="fecha_inicio" class="form-control" value="<?= htmlspecialchars($fechaInicio) ?>">
     </div>
-  </form>
+    <div class="col-12 col-sm-6 col-md-2">
+      <label class="form-label">Fecha fin</label>
+      <input type="date" name="fecha_fin" class="form-control" value="<?= htmlspecialchars($fechaFin) ?>">
+    </div>
+    <div class="col-12 col-sm-6 col-md-2">
+      <label class="form-label">Categoría</label>
+      <select name="categoria_id" class="form-select">
+        <option value="">Todas</option>
+        <?php foreach ($categorias as $c): ?>
+          <option value="<?= $c['id'] ?>" <?= ($categoriaId == $c['id']) ? 'selected' : '' ?>>
+            <?= htmlspecialchars($c['nombre']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+      <label class="form-label">Producto</label>
+      <select name="producto_id" class="form-select">
+        <option value="">Todos</option>
+        <?php foreach ($productos as $p): ?>
+          <option value="<?= $p['id'] ?>" <?= ($productoId == $p['id']) ? 'selected' : '' ?>>
+            <?= htmlspecialchars($p['nombre']) ?><?= !empty($p['atributos']) ? ' — ' . htmlspecialchars($p['atributos']) : '' ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="col-12 col-md-3 d-flex justify-content-end align-items-end gap-2 ms-auto">
+      <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+      <a href="movimientos.php" class="btn btn-secondary">❌ Limpiar</a>
+      <button type="button" onclick="imprimirReporte()" class="btn btn-success">🖨 Imprimir</button>
+    </div>
+  </div>
+</form>
 
   <!-- 📊 TABLA -->
   <div class="card shadow-sm" id="reporteArea">

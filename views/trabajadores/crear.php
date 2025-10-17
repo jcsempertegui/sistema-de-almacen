@@ -2,7 +2,6 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/TrabajadorController.php';
-include_once __DIR__ . '/../../includes/header.php';
 
 $controller = new TrabajadorController($conn);
 
@@ -19,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: listar.php?msg=Trabajador creado correctamente");
     exit;
 }
+include_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="container mt-4">

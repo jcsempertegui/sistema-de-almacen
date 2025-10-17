@@ -1,12 +1,8 @@
 <?php
+session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/ProductoController.php';
-include_once __DIR__ . '/../../includes/header.php';
-
-if ($_SESSION['rol'] != 'admin') {
-    die("Acceso denegado");
-}
-
+if ($_SESSION['rol'] != 'admin') die("Acceso denegado");
 $controller = new ProductoController($conn);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -37,9 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
-
+include_once __DIR__ . '/../../includes/header.php';
 // Traer categorías para el select
 $categorias = $controller->listarCategorias();
+
 ?>
 
 <div class="container">

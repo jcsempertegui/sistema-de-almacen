@@ -7,6 +7,22 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../controllers/BackupController.php';
+
+// opcional: ejecutar verificación automática de backup (no rompe la app si falla)
+try {
+  require_once __DIR__ . '/../controllers/BackupController.php';
+  $backupCtl = new BackupController($conn);
+  $auto = $backupCtl->verificarAutomatico();
+  // $auto puede ser false o array con success/mensaje
+  if (is_array($auto) && $auto['success']) {
+      // opcional: guardar mensaje en session para mostrar en UI
+      $_SESSION['backup_msg'] = $auto['mensaje'];
+  }
+} catch (Exception $e) {
+  error_log("Error verif backup automático: " . $e->getMessage());
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -73,6 +89,7 @@ require_once __DIR__ . '/../config/config.php';
             <li class="nav-item">
               <a class="nav-link" href="<?= BASE_URL ?>/views/usuarios/listar.php"><i class="fas fa-user-cog"></i> Usuarios</a>
             </li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/backup/index.php"><i class="fas fa-users"></i>Back-Up</a></li>
           <?php endif; ?>
         </ul>
 

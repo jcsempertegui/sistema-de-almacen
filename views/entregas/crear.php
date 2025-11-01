@@ -1,10 +1,7 @@
-<?php
+<?php 
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/EntregaController.php';
-/*if ($_SESSION['rol'] != 'admin') {
-    die("Acceso denegado");
-}*/
 
 $controller = new EntregaController($conn);
 $productos = $controller->listarProductos();
@@ -35,16 +32,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Debe agregar al menos un producto.";
     } else {
         try {
+            // 🔍 Validar stock antes de crear la entrega
+            foreach ($detalles as $d) {
+                $stmt = $conn->prepare("SELECT nombre, stock FROM producto WHERE id = ?");
+                $stmt->bind_param("i", $d['producto_id']);
+                $stmt->execute();
+                $resultado = $stmt->get_result()->fetch_assoc();
+
+                if (!$resultado) {
+                    throw new Exception("Producto no encontrado (ID: {$d['producto_id']}).");
+                }
+
+                if ($resultado['stock'] < $d['cantidad']) {
+                    throw new Exception("El producto '{$resultado['nombre']}' no tiene stock suficiente. Stock actual: {$resultado['stock']}.");
+                }
+
+                if ($resultado['stock'] < 1) {
+                    throw new Exception("El producto '{$resultado['nombre']}' no tiene stock disponible (stock = 0).");
+                }
+            }
+
+            // ✅ Si pasa la validación, crear la entrega
             $controller->crear($data, $detalles);
             header("Location: listar.php?msg=Entrega creada correctamente");
             exit;
+
         } catch (Exception $ex) {
             $error = $ex->getMessage();
         }
     }
 }
+
 include_once __DIR__ . '/../../includes/header.php';
 ?>
+
 <div class="container mt-4">
   <h2>➕ Nueva Entrega</h2>
 
@@ -70,7 +91,7 @@ include_once __DIR__ . '/../../includes/header.php';
         <input type="date" name="fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
       </div>
       <div class="col-md-5">
-        <label class="form-label">Inspector de Seguridad del Area</label>
+        <label class="form-label">Inspector de Seguridad del Área</label>
         <input type="text" name="inspector" class="form-control">
       </div>
     </div>
@@ -81,34 +102,34 @@ include_once __DIR__ . '/../../includes/header.php';
     </div>
 
     <h5 class="mt-3">🛒 Detalle de Productos</h5>
-<table class="table table-bordered" id="productosTable">
-  <thead>
-    <tr>
-      <th style="width:55%">Producto</th>
-      <th style="width:15%">Cantidad</th>
-      <th style="width:20%">Motivo</th>
-      <th style="width:10%">Acción</th>
-    </tr>
-  </thead>
-  <tbody id="detalle-body">
-    <tr class="detalle-row">
-      <td>
-        <select name="producto_id[]" class="form-select producto-select" required>
-          <option value="">Seleccione...</option>
-          <?php foreach ($productos as $p): ?>
-              <option value="<?= $p['id'] ?>" 
-                      title="<?= htmlspecialchars($p['atributos'] ?? '') ?>">
-                  <?= htmlspecialchars($p['nombre']) ?>
-              </option>
-          <?php endforeach; ?>
-        </select>
-      </td>
-      <td><input type="number" min="1" name="cantidad[]" class="form-control" value="1" required></td>
-      <td><input type="text" name="motivo[]" class="form-control"></td>
-      <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-    </tr>
-  </tbody>
-</table>
+    <table class="table table-bordered" id="productosTable">
+      <thead>
+        <tr>
+          <th style="width:55%">Producto</th>
+          <th style="width:15%">Cantidad</th>
+          <th style="width:20%">Motivo</th>
+          <th style="width:10%">Acción</th>
+        </tr>
+      </thead>
+      <tbody id="detalle-body">
+        <tr class="detalle-row">
+          <td>
+		<select name="producto_id[]" class="form-select producto-select" required>
+          		<option value="">Seleccione...</option>
+          		<?php foreach ($productos as $p): ?>
+              		<option value="<?= $p['id'] ?>" 
+                 	title="<?= htmlspecialchars($p['atributos'] ?? '') ?>">
+                 	<?= htmlspecialchars($p['nombre']) ?>
+              		</option>
+          		<?php endforeach; ?>
+		</select>
+          </td>
+          <td><input type="number" min="1" name="cantidad[]" class="form-control" value="1" required></td>
+          <td><input type="text" name="motivo[]" class="form-control"></td>
+          <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
+        </tr>
+      </tbody>
+    </table>
 
     <button type="button" class="btn btn-secondary mb-3" id="addRow">➕ Agregar Producto</button>
 

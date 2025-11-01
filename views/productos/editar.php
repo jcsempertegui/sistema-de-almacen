@@ -2,7 +2,6 @@
 session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/ProductoController.php';
-include_once __DIR__ . '/../../includes/header.php';
 
 if ($_SESSION['rol'] != 'admin') die("Acceso denegado");
 
@@ -23,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: listar.php?msg=Producto actualizado correctamente");
     exit;
 }
+include_once __DIR__ . '/../../includes/header.php';
+
 ?>
 
 <div class="container mt-4">

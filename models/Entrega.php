@@ -42,7 +42,6 @@ class Entrega {
             $types .= "i";
         }
 
-
         $stmt = $this->conn->prepare($sql);
         if (!empty($params)) {
             $stmt->bind_param($types, ...$params);
@@ -64,20 +63,16 @@ class Entrega {
         $stmt->execute();
         $entrega = $stmt->get_result()->fetch_assoc();
 
-        $sqlDet = "SELECT 
-        de.id,
-        de.producto_id,
-        p.nombre,
-        GROUP_CONCAT(CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ') AS atributos,
-        de.cantidad,
-        de.motivo
-   FROM detalle_entrega de
-   INNER JOIN producto p ON de.producto_id = p.id
-   LEFT JOIN atributo_producto ap ON ap.producto_id = p.id
-   LEFT JOIN atributo a ON a.id = ap.atributo_id
-   WHERE de.entrega_id = ?
-   GROUP BY de.id, de.producto_id, p.nombre, de.cantidad, de.motivo";
-$stmtD = $this->conn->prepare($sqlDet);
+        $sqlDet = "SELECT de.id, de.producto_id, p.nombre,
+                          GROUP_CONCAT(CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ') AS atributos,
+                          de.cantidad, de.motivo
+                   FROM detalle_entrega de
+                   INNER JOIN producto p ON de.producto_id = p.id
+                   LEFT JOIN atributo_producto ap ON ap.producto_id = p.id
+                   LEFT JOIN atributo a ON a.id = ap.atributo_id
+                   WHERE de.entrega_id=?
+                   GROUP BY de.id";
+        $stmtD = $this->conn->prepare($sqlDet);
         $stmtD->bind_param("i", $id);
         $stmtD->execute();
         $entrega['detalles'] = $stmtD->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -85,102 +80,115 @@ $stmtD = $this->conn->prepare($sqlDet);
         return $entrega;
     }
 
-    // 📌 Crear entrega
+    // 📌 Crear entrega (validando stock)
     public function crear($data, $detalles) {
-        $sql = "INSERT INTO entrega (trabajador_id, usuario_id, fecha, campo, inspector)
-                VALUES (?, ?, ?, ?, ?)";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("iisss", $data['trabajador_id'], $data['usuario_id'], $data['fecha'], $data['campo'], $data['inspector']);
-        $stmt->execute();
-        $entregaId = $this->conn->insert_id;
+        $this->conn->begin_transaction();
 
-        foreach ($detalles as $d) {
-            $stmtD = $this->conn->prepare("INSERT INTO detalle_entrega (entrega_id, producto_id, cantidad, motivo) VALUES (?, ?, ?, ?)");
-            $stmtD->bind_param("iiis", $entregaId, $d['producto_id'], $d['cantidad'], $d['motivo']);
-            $stmtD->execute();
+        try {
+            // Validar stock antes de insertar
+            foreach ($detalles as $d) {
+                $stmtCheck = $this->conn->prepare("SELECT nombre, stock FROM producto WHERE id = ?");
+                $stmtCheck->bind_param("i", $d['producto_id']);
+                $stmtCheck->execute();
+                $producto = $stmtCheck->get_result()->fetch_assoc();
 
-            // Reducir stock
-            $this->conn->query("UPDATE producto SET stock = stock - {$d['cantidad']} WHERE id={$d['producto_id']}");
-        }
-
-        return true;
-    }
-
-    // 📌 Editar entrega
-// 📌 Editar entrega
-public function editar($id, $data, $detalles) {
-    // 🔹 Iniciar transacción
-    $this->conn->begin_transaction();
-
-    try {
-        // 🔹 1. Revertir stock previo y guardar detalles antiguos
-        $sqlOld = "SELECT producto_id, cantidad FROM detalle_entrega WHERE entrega_id=?";
-        $stmtOld = $this->conn->prepare($sqlOld);
-        $stmtOld->bind_param("i", $id);
-        $stmtOld->execute();
-        $oldDetalles = $stmtOld->get_result()->fetch_all(MYSQLI_ASSOC);
-
-        // Revertir stock de los detalles antiguos
-        foreach ($oldDetalles as $od) {
-            $updateStock = $this->conn->prepare("UPDATE producto SET stock = stock + ? WHERE id = ?");
-            $updateStock->bind_param("ii", $od['cantidad'], $od['producto_id']);
-            $updateStock->execute();
-        }
-
-        // 🔹 2. Validar stock para los NUEVOS detalles
-        foreach ($detalles as $d) {
-            $productoId = (int)$d['producto_id'];
-            $cantidad = (int)$d['cantidad'];
-
-            // Usar consulta preparada para evitar inyección SQL
-            $res = $this->conn->prepare("SELECT stock, nombre FROM producto WHERE id = ?");
-            $res->bind_param("i", $productoId);
-            $res->execute();
-            $producto = $res->get_result()->fetch_assoc();
-
-            if (!$producto) {
-                throw new Exception("Producto con ID $productoId no encontrado.");
+                if (!$producto) {
+                    throw new Exception("Producto con ID {$d['producto_id']} no encontrado.");
+                }
+                if ($producto['stock'] < $d['cantidad']) {
+                    throw new Exception("Stock insuficiente para el producto '{$producto['nombre']}'. Stock actual: {$producto['stock']}, solicitado: {$d['cantidad']}.");
+                }
             }
 
-            if ($producto['stock'] < $cantidad) {
-                throw new Exception("Stock insuficiente para el producto '{$producto['nombre']}'. Stock actual: {$producto['stock']}, solicitado: $cantidad.");
+            // Insertar entrega
+            $sql = "INSERT INTO entrega (trabajador_id, usuario_id, fecha, campo, inspector)
+                    VALUES (?, ?, ?, ?, ?)";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("iisss", $data['trabajador_id'], $data['usuario_id'], $data['fecha'], $data['campo'], $data['inspector']);
+            $stmt->execute();
+            $entregaId = $this->conn->insert_id;
+
+            // Insertar detalles y reducir stock
+            foreach ($detalles as $d) {
+                $stmtD = $this->conn->prepare("INSERT INTO detalle_entrega (entrega_id, producto_id, cantidad, motivo) VALUES (?, ?, ?, ?)");
+                $stmtD->bind_param("iiis", $entregaId, $d['producto_id'], $d['cantidad'], $d['motivo']);
+                $stmtD->execute();
+
+                $updateStock = $this->conn->prepare("UPDATE producto SET stock = stock - ? WHERE id = ?");
+                $updateStock->bind_param("ii", $d['cantidad'], $d['producto_id']);
+                $updateStock->execute();
             }
+
+            $this->conn->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->conn->rollback();
+            throw new Exception("Error al crear la entrega: " . $e->getMessage());
         }
-
-        // 🔹 3. Actualizar cabecera
-        $sql = "UPDATE entrega SET trabajador_id=?, fecha=?, campo=?, inspector=? WHERE id=?";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("isssi", $data['trabajador_id'], $data['fecha'], $data['campo'], $data['inspector'], $id);
-        $stmt->execute();
-
-        // 🔹 4. Eliminar detalles previos
-        $deleteDetalles = $this->conn->prepare("DELETE FROM detalle_entrega WHERE entrega_id = ?");
-        $deleteDetalles->bind_param("i", $id);
-        $deleteDetalles->execute();
-
-        // 🔹 5. Insertar nuevos detalles y actualizar stock
-        foreach ($detalles as $d) {
-            // Insertar detalle
-            $stmtD = $this->conn->prepare("INSERT INTO detalle_entrega (entrega_id, producto_id, cantidad, motivo) VALUES (?, ?, ?, ?)");
-            $stmtD->bind_param("iiis", $id, $d['producto_id'], $d['cantidad'], $d['motivo']);
-            $stmtD->execute();
-
-            // Actualizar stock (reducir)
-            $updateStock = $this->conn->prepare("UPDATE producto SET stock = stock - ? WHERE id = ?");
-            $updateStock->bind_param("ii", $d['cantidad'], $d['producto_id']);
-            $updateStock->execute();
-        }
-
-        // 🔹 Confirmar transacción
-        $this->conn->commit();
-        return true;
-
-    } catch (Exception $e) {
-        // 🔹 Revertir en caso de error
-        $this->conn->rollback();
-        throw $e; // Relanzar la excepción
     }
-}
+
+    // 📌 Editar entrega (con validación de stock)
+    public function editar($id, $data, $detalles) {
+        $this->conn->begin_transaction();
+
+        try {
+            // Revertir stock previo
+            $sqlOld = "SELECT producto_id, cantidad FROM detalle_entrega WHERE entrega_id=?";
+            $stmtOld = $this->conn->prepare($sqlOld);
+            $stmtOld->bind_param("i", $id);
+            $stmtOld->execute();
+            $oldDetalles = $stmtOld->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            foreach ($oldDetalles as $od) {
+                $updateStock = $this->conn->prepare("UPDATE producto SET stock = stock + ? WHERE id = ?");
+                $updateStock->bind_param("ii", $od['cantidad'], $od['producto_id']);
+                $updateStock->execute();
+            }
+
+            // Validar stock
+            foreach ($detalles as $d) {
+                $stmtCheck = $this->conn->prepare("SELECT nombre, stock FROM producto WHERE id = ?");
+                $stmtCheck->bind_param("i", $d['producto_id']);
+                $stmtCheck->execute();
+                $producto = $stmtCheck->get_result()->fetch_assoc();
+
+                if (!$producto) {
+                    throw new Exception("Producto con ID {$d['producto_id']} no encontrado.");
+                }
+                if ($producto['stock'] < $d['cantidad']) {
+                    throw new Exception("Stock insuficiente para el producto '{$producto['nombre']}'. Stock actual: {$producto['stock']}, solicitado: {$d['cantidad']}.");
+                }
+            }
+
+            // Actualizar cabecera
+            $sql = "UPDATE entrega SET trabajador_id=?, fecha=?, campo=?, inspector=? WHERE id=?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("isssi", $data['trabajador_id'], $data['fecha'], $data['campo'], $data['inspector'], $id);
+            $stmt->execute();
+
+            // Eliminar detalles previos
+            $deleteDetalles = $this->conn->prepare("DELETE FROM detalle_entrega WHERE entrega_id=?");
+            $deleteDetalles->bind_param("i", $id);
+            $deleteDetalles->execute();
+
+            // Insertar nuevos detalles
+            foreach ($detalles as $d) {
+                $stmtD = $this->conn->prepare("INSERT INTO detalle_entrega (entrega_id, producto_id, cantidad, motivo) VALUES (?, ?, ?, ?)");
+                $stmtD->bind_param("iiis", $id, $d['producto_id'], $d['cantidad'], $d['motivo']);
+                $stmtD->execute();
+
+                $updateStock = $this->conn->prepare("UPDATE producto SET stock = stock - ? WHERE id = ?");
+                $updateStock->bind_param("ii", $d['cantidad'], $d['producto_id']);
+                $updateStock->execute();
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->conn->rollback();
+            throw new Exception("Error al editar la entrega: " . $e->getMessage());
+        }
+    }
 
     // 📌 Eliminar entrega
     public function eliminar($id) {
@@ -202,7 +210,7 @@ public function editar($id, $data, $detalles) {
 
     // Helpers
     public function listarProductos() {
-        $sql = "SELECT p.id, p.nombre,
+        $sql = "SELECT p.id, p.nombre, p.stock,
                        GROUP_CONCAT(DISTINCT CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ') AS atributos
                 FROM producto p
                 LEFT JOIN atributo_producto ap ON ap.producto_id = p.id
@@ -211,13 +219,11 @@ public function editar($id, $data, $detalles) {
         return $this->conn->query($sql)->fetch_all(MYSQLI_ASSOC);
     }
 
-        // 📌 Helpers
-        public function listarTrabajadores() {
-            return $this->conn->query("SELECT id, nombre, apellido_paterno, apellido_materno FROM trabajador ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
-        }
-    
-        public function listarUsuarios() {
-            return $this->conn->query("SELECT id, usuario FROM usuario ORDER BY usuario ASC")->fetch_all(MYSQLI_ASSOC);
-        }
-    
+    public function listarTrabajadores() {
+        return $this->conn->query("SELECT id, nombre, apellido_paterno, apellido_materno FROM trabajador ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function listarUsuarios() {
+        return $this->conn->query("SELECT id, usuario FROM usuario ORDER BY usuario ASC")->fetch_all(MYSQLI_ASSOC);
+    }
 }

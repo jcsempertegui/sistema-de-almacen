@@ -2,6 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/EntregaController.php';
+
 if ($_SESSION['rol'] != 'admin') die("Acceso denegado");
 
 $controller = new EntregaController($conn);
@@ -10,36 +11,37 @@ $entrega = $controller->obtener($id);
 $productos = $controller->listarProductos();
 $trabajadores = $controller->listarTrabajadores();
 
+$error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $data = [
-      'trabajador_id' => $_POST['trabajador_id'],
-      'fecha'         => $_POST['fecha'],
-      'campo'         => $_POST['campo'] ?? '',
-      'inspector'     => $_POST['inspector'] ?? ''
-  ];
+    $data = [
+        'trabajador_id' => $_POST['trabajador_id'],
+        'fecha'         => $_POST['fecha'],
+        'campo'         => $_POST['campo'] ?? '',
+        'inspector'     => $_POST['inspector'] ?? ''
+    ];
 
-  $detalles = [];
-  if (!empty($_POST['producto_id']) && is_array($_POST['producto_id'])) {
-      foreach ($_POST['producto_id'] as $i => $pid) {
-          if ($pid === '' || !isset($_POST['cantidad'][$i])) continue;
-          $detalles[] = [
-              'producto_id' => (int)$pid,
-              'cantidad' => (int)$_POST['cantidad'][$i],
-              'motivo' => $_POST['motivo'][$i] ?? ''
-          ];
-      }
-  }
+    $detalles = [];
+    if (!empty($_POST['producto_id']) && is_array($_POST['producto_id'])) {
+        foreach ($_POST['producto_id'] as $i => $pid) {
+            if ($pid === '' || !isset($_POST['cantidad'][$i])) continue;
+            $detalles[] = [
+                'producto_id' => (int)$pid,
+                'cantidad' => (int)$_POST['cantidad'][$i],
+                'motivo' => $_POST['motivo'][$i] ?? ''
+            ];
+        }
+    }
 
-  try {
-      $controller->editar($id, $data, $detalles);
-      header("Location: listar.php?msg=Entrega actualizada correctamente");
-      exit;
-  } catch (Exception $ex) {
-      $error = $ex->getMessage(); // 🔴 Captura el error de stock o cualquier otro
-  }
+    try {
+        $controller->editar($id, $data, $detalles);
+        header("Location: listar.php?msg=Entrega actualizada correctamente");
+        exit;
+    } catch (Exception $ex) {
+        $error = $ex->getMessage();
+    }
 }
 include_once __DIR__ . '/../../includes/header.php';
-
 ?>
 
 <div class="container mt-4">

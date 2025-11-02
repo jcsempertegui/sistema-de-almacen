@@ -37,7 +37,8 @@ try {
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
     <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="<?= BASE_URL ?>/public/index.php">📦 Almacén</a>
+      <img src="../public/img/confi2.png" alt="Logo Almacén" class="mb-3" style="max-width:200px; height:auto;">
+      <a class="navbar-brand fw-bold" href="<?= BASE_URL ?>/public/index.php"> Almacén</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>

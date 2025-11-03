@@ -10,8 +10,12 @@ $productos = $controller->listar();
 <div class="d-flex justify-content-between mb-3">
 <h2>📦 Productos</h2>
 <?php if (isset($_GET['msg'])): ?>
-    <div class="alert alert-success"><?= htmlspecialchars($_GET['msg']) ?></div>
-  <?php endif; ?>
+  <div class="alert alert-success"><?= htmlspecialchars($_GET['msg']) ?></div>
+<?php endif; ?>
+
+<?php if (isset($_GET['error'])): ?>
+  <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
+<?php endif; ?>
 
   <?php if ($_SESSION['rol'] == 'admin'): ?>
     <a href="crear.php" class="btn btn-success">➕ Nueva Producto</a>

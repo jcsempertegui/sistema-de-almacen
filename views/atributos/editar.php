@@ -2,7 +2,7 @@
 session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/AtributoController.php';
-include_once __DIR__ . '/../../includes/header.php';
+
 
 if ($_SESSION['rol'] != 'admin') die("Acceso denegado");
 
@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: listar.php?msg=Atributo editado correctamente");
     exit;
 }
+include_once __DIR__ . '/../../includes/header.php';
 
 $categorias = $controller->listarCategorias();
 ?>

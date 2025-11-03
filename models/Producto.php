@@ -150,16 +150,37 @@ class Producto {
 
     // Eliminar producto
     public function eliminar($id) {
-        $del = $this->conn->prepare("DELETE FROM atributo_producto WHERE producto_id = ?");
-        $del->bind_param("i", $id);
-        $del->execute();
+        try {
+            // Verificar si el producto está asociado a entregas o remitos
+            $verificar = $this->conn->prepare("
+                SELECT COUNT(*) as total FROM detalle_entrega WHERE producto_id = ?
+                UNION
+                SELECT COUNT(*) as total FROM detalle_remito WHERE producto_id = ?
+            ");
+            $verificar->bind_param("ii", $id, $id);
+            $verificar->execute();
+            $resultados = $verificar->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $sql = "DELETE FROM producto WHERE id = ?";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
-    }
+            foreach ($resultados as $row) {
+                if ($row['total'] > 0) {
+                    throw new Exception("No se puede eliminar el producto porque está asociado a entregas o remitos.");
+                }
+            }
 
+            // Si no hay relaciones, eliminar
+            $stmt = $this->conn->prepare("DELETE FROM producto WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+
+            if ($stmt->affected_rows === 0) {
+                throw new Exception("No se encontró el producto o no se pudo eliminar.");
+            }
+
+            return true;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }    
     // Listar categorías
     public function listarCategorias() {
         $sql = "SELECT * FROM categoria ORDER BY nombre ASC";

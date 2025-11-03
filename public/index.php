@@ -180,18 +180,6 @@ $productosMasEntregados = $conn->query("
       </div>
     </div>
   </div>
-
-  <!-- Accesos rápidos -->
-  <div class="text-center mt-5">
-    <hr class="w-50 mx-auto mb-4">
-    <h4 class="text-secondary fw-bold">Accesos rápidos</h4>
-    <div class="d-flex flex-wrap justify-content-center gap-3 mt-3">
-      <a href="views/remitos/crear.php" class="btn btn-outline-primary"><i class="fa fa-plus"></i> Nuevo Remito</a>
-      <a href="views/entregas/crear.php" class="btn btn-outline-success"><i class="fa fa-hand-holding"></i> Nueva Entrega</a>
-      <a href="views/productos/crear.php" class="btn btn-outline-info"><i class="fa fa-boxes"></i> Nuevo Producto</a>
-      <a href="views/backup/configurar.php" class="btn btn-outline-danger"><i class="fa fa-database"></i> Configurar Backup</a>
-    </div>
-  </div>
 </div>
 
 <footer class="mt-5">

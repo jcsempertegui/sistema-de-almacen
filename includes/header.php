@@ -35,23 +35,28 @@ try {
 </head>
 <body>
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color:rgba(5, 115, 189, 0.9);">
     <div class="container-fluid">
-      <img src="../public/img/confi2.png" alt="Logo Almacén" class="mb-3" style="max-width:200px; height:auto;">
-      <a class="navbar-brand fw-bold" href="<?= BASE_URL ?>/public/index.php"> Almacén</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+    <!-- 🔗 Logo clickeable que redirige al index -->
+    <a class="navbar-brand d-flex align-items-center" href="<?= BASE_URL ?>/public/index.php">
+      <img src="<?= BASE_URL ?>/public/img/confi2.png" 
+           alt="Logo del Sistema" 
+           class="mb-3" 
+           style="max-width:180px; height:auto; cursor:pointer;">
+    </a>      
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <span class="navbar-toggler-icon"></span>
+    </button>
       
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 fw-bold">
 
           <!-- Inventario -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="inventarioDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-boxes"></i> Inventario
+            <a class="nav-link dropdown-toggle" href="#" id="inventarioDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:rgb(255, 255, 255);">
+              <i class="fas fa-boxes" ></i> Inventario
             </a>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu"  style="background-color:rgb(255, 160, 71);">
               <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/productos/listar.php">📦 Productos</a></li>
               <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/categorias/listar.php">🗂 Categorías</a></li>
               <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/atributos/listar.php">🏷 Atributos</a></li>
@@ -60,10 +65,10 @@ try {
 
           <!-- Movimientos -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="movimientosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" id="movimientosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:rgb(255, 255, 255);">
               <i class="fas fa-exchange-alt"></i> Movimientos
             </a>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu" style="background-color:rgb(255, 160, 71);">
               <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/remitos/listar.php">📥/📤 Remitos</a></li>
               <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/entregas/listar.php">📦 Entregas</a></li>
             </ul>
@@ -71,16 +76,16 @@ try {
 
           <!-- Trabajadores -->
           <li class="nav-item">
-            <a class="nav-link" href="<?= BASE_URL ?>/views/trabajadores/listar.php"><i class="fas fa-users"></i> Trabajadores</a>
+            <a class="nav-link" href="<?= BASE_URL ?>/views/trabajadores/listar.php" style="color:rgb(255, 255, 255);"><i class="fas fa-users"></i> Trabajadores</a>
           </li>
 
           <!-- Reportes -->
           <?php if ($_SESSION['rol'] == 'admin'): ?>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="reportesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a class="nav-link dropdown-toggle" href="#" id="reportesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:rgb(255, 255, 255);">
                 <i class="fas fa-chart-line"></i> Reportes
               </a>
-              <ul class="dropdown-menu" aria-labelledby="reportesDropdown">
+              <ul class="dropdown-menu" aria-labelledby="reportesDropdown" style="background-color:rgb(255, 160, 71);">
                 <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/entradas.php">📥 Entradas</a></li>
                 <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/salidas.php">📤 Salidas</a></li>
                 <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/entregas.php">📦 Entregas</a></li>
@@ -88,19 +93,19 @@ try {
               </ul>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="<?= BASE_URL ?>/views/usuarios/listar.php"><i class="fas fa-user-cog"></i> Usuarios</a>
+              <a class="nav-link" href="<?= BASE_URL ?>/views/usuarios/listar.php" style="color:rgb(255, 255, 255);"><i class="fas fa-user-cog"></i> Usuarios</a>
             </li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/backup/index.php"><i class="fas fa-users"></i>Back-Up</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/backup/index.php" style="color:rgb(255, 255, 255);"><i class="fas fa-users"></i>Back-Up</a></li>
           <?php endif; ?>
         </ul>
 
         <!-- Usuario -->
         <div class="dropdown">
-          <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <a class="btn btn-outline-dark dropdown-toggle fw-bold" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color:rgb(255, 255, 255);">
             👤 <?= $_SESSION['usuario'] ?> (<?= $_SESSION['rol'] ?>)
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>/public/logout.php"><i class="fas fa-sign-out-alt"></i> Salir</a></li>
+            <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>/public/logout.php"><i class="fas fa-sign-out-alt" ></i> Salir</a></li>
           </ul>
         </div>
 

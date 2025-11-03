@@ -9,10 +9,14 @@ if ($_SESSION['rol'] != 'admin') die("Acceso denegado");
 $controller = new UsuarioController($conn);
 $usuarios = $controller->listar();
 ?>
+<div class="d-flex justify-content-between mb-3">
 <h2>Gestión de Usuarios</h2>
-<a href="crear.php" class="btn btn-primary mb-3">➕ Nuevo Usuario</a>
-<table class="table table-striped">
-  <thead><tr><th>ID</th><th>Nombre</th><th>Apellido</th><th>Usuario</th><th>Rol</th><th>Acciones</th></tr></thead>
+<a href="crear.php" class="btn btn-success">➕ Nuevo Usuario</a>
+</div>
+
+<div class="container mt-4">
+<table class="table table-bordered table-striped">
+  <thead class="table-dark"><tr><th>ID</th><th>Nombre</th><th>Apellido</th><th>Usuario</th><th>Rol</th><th>Acciones</th></tr></thead>
   <tbody>
     <?php foreach($usuarios as $u): ?>
     <tr>
@@ -29,4 +33,5 @@ $usuarios = $controller->listar();
     <?php endforeach; ?>
   </tbody>
 </table>
+</div>
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>

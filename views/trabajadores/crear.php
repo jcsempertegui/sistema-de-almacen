@@ -37,7 +37,7 @@ include_once __DIR__ . '/../../includes/header.php';
     <div class="row mb-3">
       <div class="col-md-6">
         <label class="form-label">Apellido Materno</label>
-        <input type="text" name="apellido_materno" class="form-control" required>
+        <input type="text" name="apellido_materno" class="form-control">
       </div>
       <div class="col-md-6">
         <label class="form-label">Cargo</label>

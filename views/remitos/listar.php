@@ -20,6 +20,18 @@ $usuarios = $controller->listarUsuarios();
 
 <div class="d-flex justify-content-between mb-3">
   <h2>📑 Remitos</h2>
+  <?php if (!empty($_GET['msg'])): ?>
+  <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <?= htmlspecialchars($_GET['msg']) ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<?php elseif (!empty($_GET['error'])): ?>
+  <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+    <?= htmlspecialchars($_GET['error']) ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<?php endif; ?>
+
   <a href="crear.php" class="btn btn-success">➕ Nuevo Remito</a>
 </div>
 
@@ -87,9 +99,11 @@ $usuarios = $controller->listarUsuarios();
         <td><?= htmlspecialchars($r['fecha']) ?></td>
         <td>
           <a href="ver.php?id=<?= $r['id'] ?>" class="btn btn-info btn-sm">👁 Ver</a>
+          <?php if ($_SESSION['rol'] == 'admin'): ?>
           <a href="editar.php?id=<?= $r['id'] ?>" class="btn btn-warning btn-sm">✏ Editar</a>
           <a href="eliminar.php?id=<?= $r['id'] ?>" class="btn btn-danger btn-sm"
              onclick="return confirm('¿Seguro de eliminar este remito?')">🗑 Eliminar</a>
+          <?php endif; ?>
         </td>
       </tr>
     <?php endforeach; ?>
@@ -97,3 +111,13 @@ $usuarios = $controller->listarUsuarios();
 </table>
 
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>
+
+<script>
+  setTimeout(() => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      alert.classList.remove('show');
+      setTimeout(() => alert.remove(), 500);
+    }
+  }, 4000); // desaparece después de 4 segundos
+</script>

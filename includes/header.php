@@ -80,7 +80,7 @@ try {
           </li>
 
           <!-- Reportes -->
-          <?php if ($_SESSION['rol'] == 'admin'): ?>
+
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="reportesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:rgb(255, 255, 255);">
                 <i class="fas fa-chart-line"></i> Reportes
@@ -92,11 +92,14 @@ try {
                 <li><a class="dropdown-item" href="<?= BASE_URL ?>/views/reportes/movimientos.php">🔄 Movimientos</a></li>
               </ul>
             </li>
+            <?php if ($_SESSION['rol'] == 'admin'): ?>
             <li class="nav-item">
               <a class="nav-link" href="<?= BASE_URL ?>/views/usuarios/listar.php" style="color:rgb(255, 255, 255);"><i class="fas fa-user-cog"></i> Usuarios</a>
             </li>
+            <?php endif; ?>
+            <?php if ($_SESSION['rol'] == 'admin'): ?>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/views/backup/index.php" style="color:rgb(255, 255, 255);"><i class="fas fa-users"></i>Back-Up</a></li>
-          <?php endif; ?>
+            <?php endif; ?>
         </ul>
 
         <!-- Usuario -->

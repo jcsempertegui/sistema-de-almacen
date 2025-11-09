@@ -26,7 +26,7 @@ $trabajadores = $controller->listar();
         <th>Cargo</th>
         <th>Nacimiento</th>
         <th>Teléfono</th>
-        <th>Acciones</th>
+        <?php if ($_SESSION['rol'] == 'admin'): ?><th>Acciones</th><?php endif; ?>
       </tr>
     </thead>
     <tbody>
@@ -38,10 +38,12 @@ $trabajadores = $controller->listar();
           <td><?= htmlspecialchars($t['cargo']) ?></td>
           <td><?= htmlspecialchars($t['nacimiento']) ?></td>
           <td><?= htmlspecialchars($t['telefono']) ?></td>
+          <?php if ($_SESSION['rol'] == 'admin'): ?>
           <td>
             <a href="editar.php?id=<?= $t['id'] ?>" class="btn btn-warning btn-sm">✏ Editar</a>
             <a href="eliminar.php?id=<?= $t['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar trabajador?')">🗑 Eliminar</a>
           </td>
+          <?php endif; ?>
         </tr>
       <?php endforeach; ?>
     </tbody>
@@ -49,3 +51,13 @@ $trabajadores = $controller->listar();
 </div>
 
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>
+
+<script>
+  setTimeout(() => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      alert.classList.remove('show');
+      setTimeout(() => alert.remove(), 500);
+    }
+  }, 4000); // desaparece después de 4 segundos
+</script>

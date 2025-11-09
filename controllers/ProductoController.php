@@ -25,15 +25,9 @@ class ProductoController {
     }
 
     public function eliminar($id) {
-        try {
-            $this->model->eliminar($id);
-            header("Location: listar.php?msg=✅ Producto eliminado correctamente");
-            exit;
-        } catch (Exception $e) {
-            header("Location: listar.php?error=" . urlencode($e->getMessage()));
-            exit;
-        }
-    }    
+        return $this->model->eliminar($id);
+    }
+        
     public function listarCategorias() {
         return $this->model->listarCategorias();
     }

@@ -151,37 +151,76 @@ class Producto {
     // Eliminar producto
     public function eliminar($id) {
         try {
-            // Verificar si el producto está asociado a entregas o remitos
-            $verificar = $this->conn->prepare("
-                SELECT COUNT(*) as total FROM detalle_entrega WHERE producto_id = ?
-                UNION
-                SELECT COUNT(*) as total FROM detalle_remito WHERE producto_id = ?
-            ");
-            $verificar->bind_param("ii", $id, $id);
-            $verificar->execute();
-            $resultados = $verificar->get_result()->fetch_all(MYSQLI_ASSOC);
+            // Validar id
+            $id = (int)$id;
+            if ($id <= 0) return "ID de producto inválido.";
 
-            foreach ($resultados as $row) {
-                if ($row['total'] > 0) {
-                    throw new Exception("No se puede eliminar el producto porque está asociado a entregas o remitos.");
+            // Iniciar transacción
+            $this->conn->begin_transaction();
+
+            // 1) Comprobar relaciones (entregas/remitos)
+            $checkSql = "
+                SELECT
+                    (SELECT COUNT(*) FROM detalle_entrega WHERE producto_id = ?) AS entregas,
+                    (SELECT COUNT(*) FROM detalle_remito WHERE producto_id = ?) AS remitos
+            ";
+            $stmtCheck = $this->conn->prepare($checkSql);
+            if ($stmtCheck === false) {
+                throw new Exception("Error en preparación de consulta de verificación.");
+            }
+            $stmtCheck->bind_param("ii", $id, $id);
+            $stmtCheck->execute();
+            $rel = $stmtCheck->get_result()->fetch_assoc();
+
+            $entregasCount = (int)($rel['entregas'] ?? 0);
+            $remitosCount  = (int)($rel['remitos'] ?? 0);
+
+            if ($entregasCount > 0 || $remitosCount > 0) {
+                $this->conn->rollback();
+                if ($entregasCount > 0 && $remitosCount > 0) {
+                    return "No se puede eliminar. El producto tiene entregas y remitos asociados.";
+                } elseif ($entregasCount > 0) {
+                    return "No se puede eliminar. El producto tiene entregas asociadas.";
+                } else {
+                    return "No se puede eliminar. El producto tiene remitos asociados.";
                 }
             }
 
-            // Si no hay relaciones, eliminar
-            $stmt = $this->conn->prepare("DELETE FROM producto WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-
-            if ($stmt->affected_rows === 0) {
-                throw new Exception("No se encontró el producto o no se pudo eliminar.");
+            // 2) Borrar atributos asociados (atributo_producto)
+            $delAttrSql = "DELETE FROM atributo_producto WHERE producto_id = ?";
+            $stmtDelAttr = $this->conn->prepare($delAttrSql);
+            if ($stmtDelAttr === false) {
+                throw new Exception("Error en preparación de eliminación de atributos.");
+            }
+            $stmtDelAttr->bind_param("i", $id);
+            if (!$stmtDelAttr->execute()) {
+                throw new Exception("Error al eliminar atributos: " . $stmtDelAttr->error);
             }
 
+            // 3) Eliminar el producto
+            $delProdSql = "DELETE FROM producto WHERE id = ?";
+            $stmtDelProd = $this->conn->prepare($delProdSql);
+            if ($stmtDelProd === false) {
+                throw new Exception("Error en preparación de eliminación de producto.");
+            }
+            $stmtDelProd->bind_param("i", $id);
+            if (!$stmtDelProd->execute()) {
+                // Si falla por FK u otro motivo, tiramos Exception
+                throw new Exception("Error al eliminar producto: " . $stmtDelProd->error);
+            }
+
+            // Commit
+            $this->conn->commit();
             return true;
+
         } catch (Exception $e) {
-            throw $e;
+            if ($this->conn->connect_errno === 0) { // si la conexión existe
+                $this->conn->rollback();
+            }
+            // Devolver el mensaje de error para mostrar al usuario
+            return "Error: " . $e->getMessage();
         }
-    }    
-    // Listar categorías
+    }        // Listar categorías
     public function listarCategorias() {
         $sql = "SELECT * FROM categoria ORDER BY nombre ASC";
         $res = $this->conn->query($sql);

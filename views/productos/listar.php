@@ -9,12 +9,16 @@ $productos = $controller->listar();
 ?>
 <div class="d-flex justify-content-between mb-3">
 <h2>📦 Productos</h2>
-<?php if (isset($_GET['msg'])): ?>
-  <div class="alert alert-success"><?= htmlspecialchars($_GET['msg']) ?></div>
-<?php endif; ?>
-
-<?php if (isset($_GET['error'])): ?>
-  <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
+<?php if (!empty($_GET['msg'])): ?>
+  <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <?= htmlspecialchars($_GET['msg']) ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<?php elseif (!empty($_GET['error'])): ?>
+  <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+    <?= htmlspecialchars($_GET['error']) ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
 <?php endif; ?>
 
   <?php if ($_SESSION['rol'] == 'admin'): ?>
@@ -69,3 +73,13 @@ $productos = $controller->listar();
 </div>
 
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>
+
+<script>
+  setTimeout(() => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      alert.classList.remove('show');
+      setTimeout(() => alert.remove(), 500);
+    }
+  }, 4000); // desaparece después de 4 segundos
+</script>

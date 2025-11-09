@@ -220,16 +220,32 @@ class Reporte {
             p.nombre AS producto,
             c.nombre AS categoria,
             COALESCE(attr.atributos, '') AS atributos,
-            COALESCE(SUM(CASE WHEN r.tipo_remito_id = 1 THEN dr.cantidad END), 0) AS total_entradas,
-            COALESCE(SUM(CASE WHEN r.tipo_remito_id = 2 THEN dr.cantidad END), 0) AS total_salidas,
-            COALESCE(SUM(de.cantidad), 0) AS total_entregas,
+            COALESCE((
+                SELECT SUM(dr2.cantidad) 
+                FROM detalle_remito dr2 
+                LEFT JOIN remito r2 ON r2.id = dr2.remito_id 
+                WHERE dr2.producto_id = p.id 
+                AND r2.tipo_remito_id = 1
+                AND (? = '' OR r2.fecha BETWEEN ? AND ?)
+            ), 0) AS total_entradas,
+            COALESCE((
+                SELECT SUM(dr3.cantidad) 
+                FROM detalle_remito dr3 
+                LEFT JOIN remito r3 ON r3.id = dr3.remito_id 
+                WHERE dr3.producto_id = p.id 
+                AND r3.tipo_remito_id = 2
+                AND (? = '' OR r3.fecha BETWEEN ? AND ?)
+            ), 0) AS total_salidas,
+            COALESCE((
+                SELECT SUM(de2.cantidad) 
+                FROM detalle_entrega de2 
+                LEFT JOIN entrega e2 ON e2.id = de2.entrega_id 
+                WHERE de2.producto_id = p.id 
+                AND (? = '' OR e2.fecha BETWEEN ? AND ?)
+            ), 0) AS total_entregas,
             p.stock AS stock_actual
         FROM producto p
         LEFT JOIN categoria c ON p.categoria_id = c.id
-        LEFT JOIN detalle_remito dr ON dr.producto_id = p.id
-        LEFT JOIN remito r ON r.id = dr.remito_id
-        LEFT JOIN detalle_entrega de ON de.producto_id = p.id
-        LEFT JOIN entrega e ON e.id = de.entrega_id
         LEFT JOIN (
             SELECT ap.producto_id,
                    GROUP_CONCAT(CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ') AS atributos
@@ -243,10 +259,31 @@ class Reporte {
         $types = '';
         $params = [];
     
+        // Parámetros para entradas
         if (!empty($fechaInicio) && !empty($fechaFin)) {
-            $sql .= " AND ((r.fecha BETWEEN ? AND ?) OR (e.fecha BETWEEN ? AND ?))";
-            $types .= 'ssss';
-            $params = array_merge($params, [$fechaInicio, $fechaFin, $fechaInicio, $fechaFin]);
+            $types .= 'sss';
+            $params = array_merge($params, [$fechaInicio, $fechaInicio, $fechaFin]);
+        } else {
+            $types .= 'sss';
+            $params = array_merge($params, ['', '', '']);
+        }
+    
+        // Parámetros para salidas
+        if (!empty($fechaInicio) && !empty($fechaFin)) {
+            $types .= 'sss';
+            $params = array_merge($params, [$fechaInicio, $fechaInicio, $fechaFin]);
+        } else {
+            $types .= 'sss';
+            $params = array_merge($params, ['', '', '']);
+        }
+    
+        // Parámetros para entregas
+        if (!empty($fechaInicio) && !empty($fechaFin)) {
+            $types .= 'sss';
+            $params = array_merge($params, [$fechaInicio, $fechaInicio, $fechaFin]);
+        } else {
+            $types .= 'sss';
+            $params = array_merge($params, ['', '', '']);
         }
     
         if (!empty($categoriaId)) {
@@ -277,7 +314,6 @@ class Reporte {
         $stmt->execute();
         $res = $stmt->get_result();
         return $res->fetch_all(MYSQLI_ASSOC);
-    }
-    
+    }    
 }
 ?>

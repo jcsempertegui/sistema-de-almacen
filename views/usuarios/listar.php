@@ -11,6 +11,9 @@ $usuarios = $controller->listar();
 ?>
 <div class="d-flex justify-content-between mb-3">
 <h2>Gestión de Usuarios</h2>
+<?php if (isset($_GET['msg'])): ?>
+  <div class="alert alert-success"><?= htmlspecialchars($_GET['msg']) ?></div>
+<?php endif; ?>
 <a href="crear.php" class="btn btn-success">➕ Nuevo Usuario</a>
 </div>
 
@@ -35,3 +38,13 @@ $usuarios = $controller->listar();
 </table>
 </div>
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>
+
+<script>
+  setTimeout(() => {
+    const alert = document.querySelector('.alert');
+    if (alert) {
+      alert.classList.remove('show');
+      setTimeout(() => alert.remove(), 500);
+    }
+  }, 4000); // desaparece después de 4 segundos
+</script>

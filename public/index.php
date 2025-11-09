@@ -22,7 +22,18 @@ $totalEntregas = $conn->query("SELECT COUNT(*) AS total FROM entrega")->fetch_as
 $totalRemitos = $conn->query("SELECT COUNT(*) AS total FROM remito")->fetch_assoc()['total'] ?? 0;
 
 // Productos con stock bajo (<=3)
-$productosBajos = $conn->query("SELECT nombre, stock FROM producto WHERE stock <= 3 ORDER BY stock ASC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+$productosBajos = $conn->query("
+    SELECT p.nombre,
+           IFNULL(GROUP_CONCAT(CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', '), '') AS atributos,
+           p.stock
+    FROM producto p
+    LEFT JOIN atributo_producto ap ON ap.producto_id = p.id
+    LEFT JOIN atributo a ON a.id = ap.atributo_id
+    WHERE p.stock <= 5
+    GROUP BY p.id
+    ORDER BY p.stock ASC
+    LIMIT 10
+")->fetch_all(MYSQLI_ASSOC);
 
 // Últimas entregas
 $ultimasEntregas = $conn->query("
@@ -30,7 +41,7 @@ $ultimasEntregas = $conn->query("
     FROM entrega e
     INNER JOIN trabajador t ON e.trabajador_id = t.id
     ORDER BY e.fecha DESC
-    LIMIT 5
+    LIMIT 10
 ")->fetch_all(MYSQLI_ASSOC);
 
 // Entregas por mes (últimos 6 meses)
@@ -42,14 +53,24 @@ $entregasPorMes = $conn->query("
     ORDER BY mes ASC
 ")->fetch_all(MYSQLI_ASSOC);
 
-// Productos más entregados
+// Productos más entregados (con atributos únicos)
 $productosMasEntregados = $conn->query("
-    SELECT p.nombre, SUM(de.cantidad) AS total
+    SELECT 
+        CONCAT(
+            p.nombre,
+            IFNULL(
+                CONCAT(' — ', GROUP_CONCAT(DISTINCT CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ')),
+                ''
+            )
+        ) AS nombre,
+        SUM(de.cantidad) AS total
     FROM detalle_entrega de
     INNER JOIN producto p ON de.producto_id = p.id
+    LEFT JOIN atributo_producto ap ON ap.producto_id = p.id
+    LEFT JOIN atributo a ON a.id = ap.atributo_id
     GROUP BY p.id
     ORDER BY total DESC
-    LIMIT 5
+    LIMIT 10
 ")->fetch_all(MYSQLI_ASSOC);
 ?>
 
@@ -139,7 +160,7 @@ $productosMasEntregados = $conn->query("
               <?php if (count($productosBajos)): ?>
                 <?php foreach ($productosBajos as $p): ?>
                   <tr>
-                    <td><?= htmlspecialchars($p['nombre']) ?></td>
+                    <td><?= htmlspecialchars($p['nombre'] . ($p['atributos'] ? ' — ' . $p['atributos'] : '')) ?></td>
                     <td><span class="badge bg-danger"><?= $p['stock'] ?></span></td>
                   </tr>
                 <?php endforeach; ?>
@@ -200,6 +221,7 @@ const ctxProductos = document.getElementById('graficoProductosMasEntregados');
 const entregasData = <?= json_encode($entregasPorMes) ?>;
 const productosData = <?= json_encode($productosMasEntregados) ?>;
 
+// 📈 Gráfico de entregas por mes
 new Chart(ctxMes, {
   type: 'line',
   data: {
@@ -220,20 +242,38 @@ new Chart(ctxMes, {
   }
 });
 
+// 📊 Gráfico de productos más entregados
 new Chart(ctxProductos, {
   type: 'bar',
   data: {
-    labels: productosData.map(p => p.nombre),
+    labels: productosData.map(p => p.nombre.length > 25 ? p.nombre.substring(0, 25) + '…' : p.nombre),
     datasets: [{
       label: 'Cantidad entregada',
       data: productosData.map(p => p.total),
-      backgroundColor: ['#28a745','#17a2b8','#ffc107','#007bff','#dc3545']
+      backgroundColor: ['#28a745','#17a2b8','#ffc107','#007bff','#dc3545','#6610f2','#6c757d','#20c997','#fd7e14','#0dcaf0']
     }]
   },
   options: {
     responsive: true,
-    scales: { y: { beginAtZero: true } },
-    plugins: { legend: { display: false } }
+    scales: {
+      x: {
+        ticks: {
+          autoSkip: false,
+          maxRotation: 40,
+          minRotation: 40,
+          font: { size: 11 }
+        }
+      },
+      y: { beginAtZero: true }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: (context) => productosData[context[0].dataIndex].nombre
+        }
+      }
+    }
   }
 });
 </script>

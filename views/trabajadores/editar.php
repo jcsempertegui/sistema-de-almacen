@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/TrabajadorController.php';
-include_once __DIR__ . '/../../includes/header.php';
+if ($_SESSION['rol'] != 'admin') die("Acceso denegado");
 
 $controller = new TrabajadorController($conn);
 $id = $_GET['id'] ?? null;
@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: listar.php?msg=Trabajador actualizado correctamente");
     exit;
 }
+include_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="container mt-4">
@@ -39,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="row mb-3">
       <div class="col-md-6">
         <label class="form-label">Apellido Materno</label>
-        <input type="text" name="apellido_materno" class="form-control" value="<?= htmlspecialchars($trabajador['apellido_materno']) ?>" required>
+        <input type="text" name="apellido_materno" class="form-control" value="<?= htmlspecialchars($trabajador['apellido_materno']) ?>">
       </div>
       <div class="col-md-6">
         <label class="form-label">Cargo</label>

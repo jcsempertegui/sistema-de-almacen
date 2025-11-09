@@ -2,7 +2,6 @@
 session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/UsuarioController.php';
-include_once __DIR__ . '/../../includes/header.php';
 
 if ($_SESSION['rol'] != 'admin') die("Acceso denegado");
 
@@ -20,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: listar.php?msg=Usuario actualizado");
     exit;
 }
+include_once __DIR__ . '/../../includes/header.php';
+
 ?>
 
 <div class="container mt-4">

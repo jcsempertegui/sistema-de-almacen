@@ -55,7 +55,7 @@ include_once __DIR__ . '/../../includes/header.php';
       ?>
         <div class="mb-3">
           <label class="form-label"><?= htmlspecialchars($attr['nombre']) ?></label>
-          <input type="text" class="form-control" name="atributos[<?= $attr['id'] ?>]" value="<?= htmlspecialchars($valor) ?>" required>
+          <input type="text" class="form-control" name="atributos[<?= $attr['id'] ?>]" value="<?= htmlspecialchars($valor) ?>">
         </div>
       <?php endforeach; ?>
     </div>

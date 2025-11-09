@@ -45,7 +45,7 @@ class Atributo {
         $result = $stmt->get_result()->fetch_assoc();
     
         if ($result['total'] > 0) {
-            return false; // está en uso, no se elimina
+            return "en_uso"; // está en uso, no se elimina
         }
     
         $stmt = $this->conn->prepare("DELETE FROM atributo WHERE id=?");

@@ -1,29 +1,56 @@
-<?php 
-session_start();
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../controllers/ProductoController.php';
 
-if ($_SESSION['rol'] != 'admin') {
+// Solo admin puede eliminar
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 'admin') {
     die("Acceso denegado");
 }
 
-if (!isset($_GET['id'])) {
-    header("Location: listar.php?error=ID no especificado");
-    exit;
-}
-
-$id = intval($_GET['id']);
 $controller = new ProductoController($conn);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $controller->eliminar($id);
+// Validar id en GET
+if (!isset($_GET['id'])) {
+    header("Location: listar.php?error=" . urlencode("ID no especificado."));
     exit;
 }
 
-$stmt = $conn->prepare("SELECT nombre FROM producto WHERE id = ?");
+$id = (int)$_GET['id'];
+$producto = $controller->obtener($id);
+
+if (!$producto) {
+    header("Location: listar.php?error=" . urlencode("Producto no encontrado."));
+    exit;
+}
+
+
+// 🟢 Obtener atributos del producto
+$sqlAttr = "
+    SELECT GROUP_CONCAT(CONCAT(a.nombre, ': ', ap.valor) SEPARATOR ', ') AS atributos
+    FROM atributo_producto ap
+    INNER JOIN atributo a ON a.id = ap.atributo_id
+    WHERE ap.producto_id = ?
+";
+$stmt = $conn->prepare($sqlAttr);
 $stmt->bind_param("i", $id);
 $stmt->execute();
-$producto = $stmt->get_result()->fetch_assoc();
+$attr = $stmt->get_result()->fetch_assoc();
+$atributos = $attr['atributos'] ?? '';
+
+// Si viene POST -> intentar eliminar
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $resultado = $controller->eliminar($id);
+
+    if ($resultado === true) {
+        header("Location: listar.php?msg=" . urlencode("Producto eliminado correctamente."));
+        exit;
+    } else {
+        // resultado es mensaje de error (string)
+        header("Location: listar.php?error=" . urlencode($resultado));
+        exit;
+    }
+}
 
 include_once __DIR__ . '/../../includes/header.php';
 ?>
@@ -33,7 +60,10 @@ include_once __DIR__ . '/../../includes/header.php';
 
   <?php if ($producto): ?>
     <div class="alert alert-danger">
-      ¿Está seguro de que desea eliminar el producto <strong><?= htmlspecialchars($producto['nombre']) ?></strong>?  
+      ¿Está seguro de que desea eliminar el producto <strong><?= htmlspecialchars($producto['nombre']) ?>
+      <?php if (!empty($atributos)): ?>
+        — <?= htmlspecialchars($atributos) ?></strong>
+      <?php endif; ?>  
       Esta acción no se puede deshacer.
     </div>
 
